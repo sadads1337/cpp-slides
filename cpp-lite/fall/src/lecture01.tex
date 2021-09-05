@@ -1,0 +1,1215 @@
+\documentclass[aspectration=1610,t]{beamer}
+\usepackage{csc}
+\title{Лекция 1. Вводная}
+
+
+\date{
+   \textbf{CS центр}\\
+   7 сентября 2021\\
+   Санкт-Петербург
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Некоторые вводные}
+    Ожидается, что люди, пришедшие на курс:
+    \begin{itemize}
+        \item Имеют опыт программирования на любом языке программирования.
+        \item Имеют базовые представления об ООП:
+            классы, объекты, икапсуляция, наследование и полиморфизм.
+        \item Знакомы с базовыми алгоритмами и структурами данных: 
+            поиск, сортировка, линейный массив, хеш-таблица, \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Какие результаты ожидаем}
+    \begin{itemize}
+        \item Сможем самостоятельно решать задачи с использованием \langcpp.
+        \item Научимся самостоятельно находить ответы на свои вопросы.
+        \item Будем писать эффективный, простой и быстрый код,
+            применяя естественные для \langcpp подходы.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Где искать ответы на вопросы}
+    Опишем примерный алгоритм поиска ответы на вопросы:
+    \begin{itemize}
+        \item Гуглим проблему и идем на \url{https://stackoverflow.com}.
+        \item Читаем человекочитаемую документацию на 
+            \url{https://en.cppreference.com/w/}.
+        \item Смотрим видеозаписи курсов на \url{https://stepik.org/course/7/} и 
+            \url{https://stepik.org/course/3206/}.
+        \item Читаем актуальную версию черновика стандарта 
+            \url{https://github.com/cplusplus/draft}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Особенности \langc}
+    \begin{itemize}
+        \item {\bf Эффективность.}\\
+            Язык С позволяет писать программы, которые напрямую работают с железом. 
+        \item {\bf Стандартизированность.}\\
+            Спецификация языка \langc является международным стандартом.
+        \item {\bf Относительная простота.}\\
+            Стандарт языка \langc занимает 230 страниц\\
+            (против 700+ для \texttt{Java} и 1300+ для \langcpp).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Совместимость \langc и \langcpp}
+
+    \begin{itemize}
+        \item Один из принципов разработки стандарта \langcpp~— это
+            cохранение совместимости с \langc. 
+        \item Синтаксис \langcpp унаследован от языка \langc. 
+        \item \langcpp не является в строгом смысле надмножеством \langc.
+        \item Можно писать программы на \langc так, чтобы они успешно
+            компилировались на \langcpp.
+        \item \langc и \langcpp сильно отличаются как по сложности, так и по принятым 
+            архитектурным решениям, которые используются в обоих языках.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Стандартизация \langcpp}
+    \begin{itemize}
+        \item Лишь в 1998 году был ратифицирован международный стандарт языка 
+            \langcpp: ISO/IEC 14882:1998 ``Standard for the \langcpp Programming
+            Language''.
+        \item В 2003 году был опубликован стандарт языка ISO/IEC 14882:2003, где были
+            исправлены выявленные ошибки и недочёты предыдущей версии стандарта.
+        \item С 2005 года началась работа над новой версией стандарта, которая
+            получила кодовое название C++0x. В конце концов в 2011 году стандарт 
+            был принят и получил название \langcpp[11] ISO/IEC 14882:2011. 
+        \item В 2014 году вышел \langcpp[14]: ISO/IEC 14882:2014.
+        \item В 2017 году вышел \langcpp[17]: ISO/IEC 14882:2017.
+        \item В 2020 году вышел \langcpp[20]: ISO/IEC 14882:2020.
+        \item В данный момент готовится к публикации \langcpp[23].
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Характеристики языка \langcpp}
+    Характеристики \langcpp:
+    \begin{itemize}
+        \item сложный,
+        \item мультипарадигмальный,
+        \item эффективный,
+        \item низкоуровневый,
+        \item компилируемый,
+        \item статически типизированный.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Сложность}
+    \begin{itemize}
+        \item Описание стандарта занимает более 1300 страниц текста.
+        \item Нет никакой возможности рассказать ``весь \langcpp'' в рамках
+            одного, пусть даже очень большого курса.
+        \item В \langcpp программисту позволено очень многое, и это влeчёт за
+            собой большую ответственность.
+        \item На плечи программиста ложится много дополнительной работы:
+            \begin{itemize}
+                \item проверка корректности данных, 
+                \item управление памятью, 
+                \item обработка низкоуровневых ошибок,
+                \item \dots
+            \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Мультипарадигмальный}
+    На \langcpp можно писать программы в рамках нескольких парадигм программирования:
+    \begin{itemize}
+        \item {\bf процедурное программирование}\\
+            (код ``в стиле \langc''),
+        \item {\bf объектно-ориентированное программирование}\\
+            (классы, наследование, виртуальные функции, \dots).
+        \item {\bf обобщённое программирование}\\
+            (шаблоны функций и классов),
+        \item {\bf функциональное программирование}\\
+            (функторы, безымянные функции, замыкания),
+        \item {\bf генеративное программирование}\\
+            (метапрограммирование на шаблонах).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Эффективный}
+    Одна из фундаментальных идей языков \langc и \langcpp~---
+    {\em отсутствие неявных накладных расходов}, которые присутствуют
+    в других более высокоуровневых языках программирования.
+    \begin{itemize}
+        \item Программист сам выбирает уровень абстракции, на котором писать
+            каждую отдельную часть программы. 
+        \item Можно реализовывать критические по производительности участки
+        программы максимально эффективно.
+        \item Эффективность делает \langcpp основным языком для разработки 
+            высоконагруженных приложений, приложений с компьютерной графикой и \dots
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Низкоуровневый}
+    Язык \langcpp, как и \langc, позволяет работать напрямую 
+    с ресурсами компьютера.
+    \begin{itemize}
+        \item Позволяет писать низкоуровневые системные приложения 
+            (например, драйверы операционной системы).
+        \item Неаккуратное обращение с системными ресурсами 
+            может привести к падению программы.
+    \end{itemize}
+
+    В \langcpp отсутствует автоматическое управление памятью. 
+    \begin{itemize}
+        \item Позволяет программисту получить полный контроль над программой.
+        \item Необходимость заботиться об освобождении памяти.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Компилируемый}
+    \langcpp является компилируемым языком программирования.
+    \medskip
+
+    Для того, чтобы запустить программу на \langcpp, её нужно сначала {\em скомпилировать}.
+    \medskip
+
+    Компиляция~--- преобразование текста программы на языке программирования
+    в машинный код.
+
+    \begin{itemize}
+        \item Нет накладных расходов при исполнении программы.
+        \item При компиляции можно отловить некоторые ошибки.
+        \item Требуется компилировать для каждой платформы отдельно.
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}{Статическая типизация}
+    \langcpp является статически типизированным языком.
+    \medskip
+
+    \begin{enumerate}
+        \item Каждая сущность в программе (переменная, функция и пр.) имеет свой тип,
+        \item и этот тип определяется на момент компиляции. 
+    \end{enumerate}
+    Это нужно для того, чтобы
+    \begin{enumerate}
+        \item вычислить размер памяти, который будет занимать каждая переменная в программе,
+        \item определить, какая функция будет вызываться в каждом конкретном месте. 
+    \end{enumerate}
+
+    Всё это определяется на момент компиляции и ``зашивается'' в скомпилированную программу. 
+
+    В машинном коде никаких типов уже нет~--- там идёт работа с последовательностями байт. 
+\end{frame}
+
+
+\begin{frame}[fragile]{Что такое компиляция?}
+\begin{center}
+    \begin{tikzpicture}[auto,thick,font=\tiny]
+    \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+    \tikzstyle{file} = [rectangle,minimum width=7ex,minimum height=15mm,draw,thick]
+
+    \node [shift={(0mm,0mm)}] (programmer) {\includegraphics[height=1cm]{programmer}};
+    \node [file,shift={(35mm,0cm)}]  (file1) {\parbox{14mm}{Архитектура приложения}};
+    \node [file,shift={(80mm,0cm)}]  (file2) {Код на \langcpp};
+    \node [file,shift={(35mm,-3cm)}] (file3) {Машинный код};
+    \node [shift={(80mm,-3cm)}] (computer) {\includegraphics[height=1cm]{computer}};
+    \path [arrow,->] (programmer) edge node {Проектирование} (file1);
+    \path [arrow,->] (file1) edge node {Программирование}  (file2);
+    \path [arrow,->] (file3) edge node {Исполнение}        (computer);
+
+    \draw[->, arrow] (file2.south) -- ++(0,-.6) -| (file3.north);
+    \node [shift={(57mm,-12mm)}] {Компиляция};
+    
+    \node[cloud, cloud puffs=15.7, cloud ignores aspect, align=center, draw]
+        (cloud1) at (0cm, 1cm) {Идея};
+    \node[cloud, cloud puffs=15.7, cloud ignores aspect, align=center, draw]
+        (cloud2) at (80mm, -2cm) {0101};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Что такое компиляция?}
+\begin{center}
+\begin{tikzpicture}[auto,thick,font=\tiny]
+    \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+    \tikzstyle{file} = [rectangle,minimum width=7ex,minimum height=15mm,draw,thick]
+
+    \node [shift={(0mm,0mm)}] (programmer) {\includegraphics[height=1cm]{programmer}};
+    \node [file,shift={(35mm,0cm)}]  (file1) {\parbox{14mm}{Архитектура приложения}};
+    \node [file,shift={(80mm,0cm)}]  (file2) {Код на \texttt{Java}};
+    \node [file,shift={(0mm,-3cm)}] (file3) {Байт код};
+    \node [cloud, draw, shift={(35mm,-3cm)},label=below:JVM] (vm) {\includegraphics[height=8mm]{computer}};
+    \node [shift={(80mm,-3cm)}] (computer) {\includegraphics[height=1cm]{computer}};
+    \path [arrow,->] (programmer) edge node {Проектирование} (file1);
+    \path [arrow,->] (file1) edge node {Программирование}  (file2);
+
+
+    \draw [arrow,->] (file2.south) -- ++(0,-.6) -| (file3.north);
+    \node [shift={(35mm,-12mm)}] {Компиляция};
+
+    \path [arrow,->] (file3) edge node {Исполнение}        (vm);
+    \path [arrow,<->] (vm) edge node {Трансляция команд}          (computer);
+    
+    \node[cloud, cloud puffs=15.7, cloud ignores aspect, align=center, draw]
+        (cloud1) at (0cm, 1cm) {Идея};
+    \node[cloud, cloud puffs=15.7, cloud ignores aspect, align=center, draw]
+        (cloud2) at (80mm, -2cm) {0101};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\newcommand{\gear}[5]{%
+\foreach \i in {1,...,#1} {%
+  [rotate=(\i-1)*360/#1]  (0:#2)  arc (0:#4:#2) {%[rounded corners=1.5pt]
+               -- (#4+#5:#3)  arc (#4+#5:360/#1-#5:#3)} --  (360/#1:#2)
+               }} 
+
+\begin{frame}[fragile]{Что такое интерпретация?}
+\begin{center}
+\begin{tikzpicture}[auto,thick,font=\tiny]
+    \tikzstyle{arrow} = [auto, thick, >=stealth',shorten >=2pt, shorten <=2pt]
+    \tikzstyle{file} = [rectangle,minimum width=1cm,minimum height=15mm,draw,thick]
+
+    \node [shift={(0mm,0mm)}] (programmer) {\includegraphics[height=1cm]{programmer}};
+    \node [file,shift={(35mm,0cm)}]  (file1) {\parbox{14mm}{Архитектура приложения}};
+    \node [file,shift={(80mm,0cm)}]  (file2) {Код на \texttt{Perl}};
+    \node [shift={(35mm,-3cm)},label=below:Интерпретатор,minimum
+    height=15mm,minimum width=15mm] (perl) {Perl};
+    
+    \node [shift={(80mm,-3cm)}] (computer) {\includegraphics[height=1cm]{computer}};
+    \path [arrow,->] (programmer) edge node {Проектирование} (file1);
+    \path [arrow,->] (file1) edge node {Программирование}  (file2);
+    \path [arrow,<->] (perl)   edge node {Трансляция команд} (computer);
+
+    \draw [->, arrow] (file2.south) -- ++(0,-.6) -| (perl.north);
+    \node [shift={(57mm,-12mm)}] {Интерпретация};
+    
+    \draw [thick,shift={(35mm,-3cm)}] \gear{10}{0.6}{.7}{10}{2};
+    \draw [thick,shift={(35mm,-3cm)}] circle (.4); 
+                                     
+    \node [cloud, cloud puffs=15.7, cloud ignores aspect, align=center, draw]
+        (cloud1) at (0cm, 1cm) {Идея};
+    \node [cloud, cloud puffs=15.7, cloud ignores aspect, align=center, draw]
+        (cloud2) at (80mm, -2cm) {0101};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+%С одной стороны находится человек, с другой -- компьютер. Компьютер и человек
+%говорят на совершенно разных языках. Программирование -- это процесс перевода
+%желаний человека на язык, понятный компьютеру.
+%
+%Это преобразование занимает несколько этапов.
+%Предположим, что человек хочет написать графический редактор.
+%Он понимает, как он работать с картинками.
+%
+%Для упрощения процесса будем считать, что человек -- это программист.
+%Взаимодействие заказчика и программиста -- это отдельный сложный вопрос, который
+%выходит за границы данного курса.
+%
+%Первый этап -- проектирование и алгоритмизация. На этом этапе программист
+%описывает устройство программы в терминах сущностей, которые предоставляет
+%конкретный язык программирования. К примеру, если мы говорит про ООП, то
+%программист выделяет подсистемы, каждую из которых разбивает на классы, 
+%выделяет интерфейсы классов и описывает объектную модель взаимодействия 
+%между ними. Для каждой операции выбирается конкретный алгоритм, к примеру,
+%для преобразования цветного изображения в черно-белое можно выбрать алгоритм,
+%которые преобразует яркость пикселя в соответствующее значение ч/б пикселя 
+%компоненту.
+%
+%Второй этап -- это реализация предложенного архитектурного и алгоритмического
+%решения в терминах конкретного языка программирования. Т.е. в нашем примере, это
+%непосредственное кодирование предложенной объектной модели приложения и
+%выбранных алгоритмов на каком-то языке программирования. Результатом данного
+%этапа является код программы выбранном на языке программирования.
+%
+%Третий этап -- это компиляция. В этот момент программа из языка, понятном
+%программисту, транслируется на какой-то другой язык. Обычно в данном случае
+%подразумевается язык понятный компьютеру -- в машинные коды.
+%Иногда компиляция может происходить в несколько этапов. Так, к примеру, первый
+%компилятор С++ cfront компилировал код на С++ в код на С, а потом уже вызывался
+%компилятор С, который переводил код в машинные коды. Так и сейчас работают
+%некоторые компиляторы С++ -- к примеру, компилятор Comeau. Язык С в данном
+%случая, как я уже говорил, выступает в роли универсального ассемблера -- языка
+%низкого уровня, который просто транслировать в машинные коды конкретной
+%архитектуры. Существует множество языков, которые компилируются в С: Scheme,
+%Haskell, OCaml и т.д.
+%
+%Очень часто язык программирования компилируется в язык ассемблера -- это такой
+%специальный язык, который очень близок по структуре к машинным кодам конкретной
+%архитектуры. Компилирование программы на языке ассемблера (ассемблирование) --
+%это очень простой процесс, который можно представить как замену по словарю,
+%когда каждой команде (к примеру, ``mov (%eax),%eax'' превратится в два байта
+%``8b00'').
+%
+%Есть ещё и другие подходы. Антонимом к ``компилируемому языку'' является
+%``интерпретируемый язык''. В этом случае этап 3 отсутствует, а вместо него
+%используется специальная программа -- интерпретатор, которая читает код на языке
+%программирования и выполняет все операции строчка за строчкой. По такой схеме
+%работают различные скриптовые языки, к примеру, PHP и JavaScript.
+%
+%Ещё один вариант -- использование виртуальной машины. Для таких языков на этапе
+%3 генерируется код не для конкретного процессора, а для некоторой абстрактного
+%не существующего в природе процессора, который на каждой архитектуре реализован 
+%в виде специальной программы -- виртуальной машины. Данный подход -- нечто 
+%среднее между компилируемым языком и интерпретируемым, позволяющий сочетать 
+%некоторые плюсы обоих решений. Так работают языки семейств Java и .Net.
+%
+%Давайте закончим данный фрагмент перечислением плюсов и минусов
+%компилируемости языка.
+
+\begin{frame}[fragile]{Плюсы и минусы компилируемости в машинный код}{}
+    {\bf Плюсы:}
+    \begin{itemize}
+        \item эффективность: программа компилируется и оптимизируется для
+            конкретного процессора,
+        \item нет необходимости устанавливать сторонние приложения (такие как
+            интерпретатор или виртуальная машина).
+    \end{itemize}
+
+    {\bf Минусы:}
+    \begin{itemize}
+        \item нужно компилировать для каждой платформы,
+        \item сложность внесения изменения в программу~--- 
+            нужно перекомпилировать заново.
+    \end{itemize}
+
+    {\bf Важно:} компиляция — преобразование одностороннее, нельзя восстановить исходный код.
+\end{frame}
+
+\begin{frame}[fragile]{Разбиение программы}
+    Зачем разбивать программу на файлы? 
+    \begin{itemize}
+        \item С небольшими файлами удобнее работать.
+        \item Разбиение на файлы структурирует код.
+        \item Позволяет нескольким программистам разрабатывать 
+            приложение одновременно.
+        \item Ускоряет компиляцию программы.
+        \item Ускорение повторной компиляции при небольших 
+            изменениях в отдельных частях программы. 
+            
+    \end{itemize}
+        Файлы с кодом на \langcpp бывают двух типов:
+        \begin{enumerate}
+            \item файлы с исходным кодом (расширение \texttt{.cpp}, иногда \texttt{.C}),
+            \item заголовочные файлы (расширение \texttt{.hpp} или \texttt{.h}).
+        \end{enumerate}
+\end{frame}
+
+%Для того, чтобы говорить о компиляции С++ кода нужно сначала изучить
+%его структуру. Программа на С++ состоит из двух типов файлов:
+%файлов с исходным кодом (обычно с расширением .cpp или .С) и заголовочных файлов
+%(с расширением .h или .hpp). Предполагается, что весь код написан в файлах с
+%исходным кодом, а заголовочные файлы служат только для описания зависимостей.
+%
+%Давайте ответим на простой вопрос: зачем разбивать программу на
+%файлы? Ответ просто: потому, что нам удобнее работать с небольшими файлами,
+%чем с одним огромным, в котором ничего не найти. Это так же позволяет
+%разрабатывать приложение по частям параллельно, когда каждый программист
+%работает над какими-то своими файлами. Есть и другие причины для разделения на
+%файлы -- это переиспользование кода (в случае библиотек) и ускорение перекомпиляции
+%при небольших изменениях в отдельных частях программы. В таких случаях, если
+%изменения затронули небольшое количество файлов, достаточно перекомпилировать
+%только их.
+
+\begin{frame}[fragile]{Простейшая программа на С++}
+    \begin{itemize}
+        \item Файл {\tt foo.hpp}:
+            {\small \begin{lstlisting}
+#pragma once // страж включения
+
+// объявление (declaration) функции foo
+void foo();
+            \end{lstlisting}}
+
+        \item Файл {\tt foo.cpp}:
+            \begin{lstlisting}
+#include "foo.hpp"
+#include "bar.hpp"
+
+// определение (definition) функции foo
+void foo()
+{
+    bar(); // вызываем функцию bar
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Простейшая программа на С++}
+    \begin{itemize}
+        \item Файл {\tt bar.hpp}:
+            {\small \begin{lstlisting}
+#pragma once // страж включения
+
+// объявление (declaration) функции bar
+void bar();
+            \end{lstlisting}}
+
+        \item Файл {\tt bar.cpp}:
+            \begin{lstlisting}
+#include "bar.hpp"
+
+// определение (definition) функции bar
+void bar()
+{
+    // полезный код
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Простейшая программа на С++}
+    \begin{itemize}
+        \item \emph{Точка входа} — функция, вызываемая при запуске программы.
+            По умолчанию — это функция \verb!main!:
+            {\small \begin{lstlisting}
+#include "foo.hpp"
+
+int main()
+{
+    foo();
+}
+            \end{lstlisting}}
+            или
+            {\small \begin{lstlisting}
+#include "foo.hpp"
+
+int main(int argc, char ** argv)
+{
+    foo();
+}
+            \end{lstlisting}}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Замечания}
+    \begin{itemize}
+        \item Не забывайте разбивать программу на части.
+        \item Не забывайте про стражи включения.
+        \item Отличайте определения (.cpp) от объявлений (.hpp).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile] {Компилиция этап №1: препроцессор}
+    \begin{itemize}
+        \item Язык препроцессора -- это специальный язык программирования, 
+            встроенный в \langcpp.
+        \item Препроцессор работает с кодом на \langcpp как с текстом.
+        \item Команды языка препроцессор называют директивами,              
+            все директивы начинаются со знака \code{\#}.
+        \item Директива \code{\#include} позволяет подключать заголовочные файлы к файлам
+            кода.
+        \begin{enumerate}
+            \item \code{\#include <foo.h>} --- библиотечный заголовочный файл,
+            \item \code{\#include "bar.h"{}} --- локальный заголовочный файл.
+        \end{enumerate}
+        \item Препроцессор заменяет директиву \code{\#include "bar.h"{}} на содержимое
+        файла \texttt{bar.h}.
+    \end{itemize}
+
+%Тут важно отметить, что язык препроцессора ничего не знает о коде на С++. Т.е.
+%потенциально можно использовать препроцессор С++ для других языков, т.к. после
+%работы препроцессора всего его директивы из файлов удаляются. Это важно понимать
+%потому, что иногда программисты стараются использовать конструкции препроцессора
+%(макросы) для реализации некоторых конструкций языка (к примеру, функций). Это
+%может привести к очень нехорошим последствиям. Мы это обсудим в дальнейшем.
+%
+%Чтобы посмотреть, что получилось после работы препроцессора нужно при компиляции
+%указать ключ -E: 
+%g++ -E program.cpp > program_preprocessed.cpp
+
+\end{frame}
+
+\begin{frame}[fragile]{Компилиция этап  2: компиляция}
+    \begin{itemize}
+        \item На вход компилятору поступает код на \langcpp после обработки
+            препроцессором.
+        \item Каждый файл с кодом компилируется отдельно и независимо от других
+            файлов с кодом.
+        \item Компилируется только файлы с кодом (т.е. {\tt *.cpp}).
+        \item Заголовочные файлы сами по себе ни во что не компилируются, только в
+            составе файлов с кодом.
+        \item На выходе компилятора из каждого файла с кодом получается ``объектный
+            файл''~--- бинарный файл со скомпилированным кодом (с расширением
+            \texttt{.o} или \texttt{.obj}).
+    \end{itemize}
+\end{frame}
+%Чтобы скомпилировать файл в объектный код нужно указать ключ -с 
+%(g++ -с program.cpp).
+%При желании можно попросить компилятор транслировать код в ассемблер
+%(g++ -S program.cpp).
+
+\begin{frame}[fragile]{Компилиция этап 3: линковка (компоновка)}
+    \begin{itemize}
+        \item На этом этапе все объектные файлы объединяются в один исполняемый 
+            (или библиотечный) файл.
+        \item При этом происходит подстановка адресов функций в места их вызова.
+        \begin{lstlisting}
+    void foo()
+    {
+        bar();
+    }
+    \end{lstlisting}
+        \item По каждому объектному файлу строится таблица всех
+            функций, которые в нём определены.
+    \end{itemize}
+\end{frame}
+%В данном примере в теле функции foo вызывается функция bar. Этой функции нет в
+%файле foo.cpp. По этому при компиляции в место вызова функции bar будет
+%вставлено указание "вызвать функцию bar". При линковке компоновщик
+%просмотрит все объектные файлы и составит список всех объявленных функций. Потом
+%он заменит каждое указание вида "вызвать функцию ..." на инструкцию вызова
+%функции: посмотрит в таблице всех функций и если найдёт такую, то заменит эту
+%инструкцию на вызов функции по адресу. Если такой инструкции не будет --
+%произойдёт ошибка. Если вдруг окажется, что есть несколько одинаковых функций в
+%разных объектных файлах, то это тоже приведёт к ошибке, т.к. линковщик не сможет
+%определить какую из них использовать. 
+
+\begin{frame}[fragile]{Компилиция этап 3: линковка (компоновка)}
+    \begin{itemize}
+        \item На этапе компоновки важно, что каждая функция имеет уникальное имя.
+        \item В \langcpp может быть две функции с одним именем, но разными
+            параметрами.
+        \item Имена функций искажаются (mangle) таким образом, что в их имени
+            кодируются их параметры.\\
+            Например, компилятор GCC превратит имя функции \verb!foo!
+            \begin{lstlisting}
+void foo(int, double) {}
+            \end{lstlisting}
+            в \verb!_Z3fooid!.
+\item Аналогично функциям в линковке нуждаются глобальные переменные.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Общая схема компиляции}
+    \begin{center}
+        \begin{tikzpicture}[auto,thick,font=\tiny]
+            \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+            \tikzstyle{file} = [rectangle,minimum width=7ex,minimum height=15mm,draw,thick]
+
+            \node [file,shift={(0mm,0cm)}]    (file1) {{\tt file1.cpp}};
+            \node [file,shift={(0mm,-2cm)}]   (file2) {{\tt file2.cpp}};
+            \node [shift={(0mm,-35mm)}]        (filed) {$\vdots$};
+            \node [file,shift={(0mm,-50mm)}]   (filen) {{\tt filen.cpp}};
+
+            \node [file,shift={(4cm,0cm)}]    (file1o) {{\tt file1.o}};
+            \node [file,shift={(4cm,-2cm)}]   (file2o) {{\tt file2.o}};
+            \node [     shift={(4cm,-35mm)}]  (filedo) {$\vdots$};
+            \node [file,shift={(4cm,-50mm)}]  (fileno) {{\tt filen.o}};
+
+            \node [file,shift={(8cm,-25mm)}]    (program) {{\tt program}};
+
+            \path [arrow,->] (file1) edge node {Компиляция}  (file1o);
+            \path [arrow,->] (file2) edge node {}  (file2o);
+            \path [arrow,->] (filen) edge node {}  (fileno);
+
+            \path [arrow,->] (file1o) edge node {Линковка}  (program);
+            \path [arrow,->] (file2o) edge node {}  (program);
+            \path [arrow,->] (fileno) edge node {}  (program);
+        \end{tikzpicture}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Простые типы данных С++}
+    \begin{itemize}
+        \item Целочисленные:
+            \begin{enumerate}
+                \item \code{char} (символьный тип данных)
+                \item \code{short int}
+                \item \code{int}
+                \item \code{long int}
+            \end{enumerate}
+        Могут быть беззнаковыми (\code{unsigned}).
+        \begin{itemize}
+            \item $-2^{n-1}\ldots (2^{n-1} - 1)$ ($n$~--- число бит)
+            \item $0\ldots (2^{n} - 1)$ для $\code{unsigned}$
+        \end{itemize}
+
+        \item Числа с плавающей точкой:
+            \begin{enumerate}
+                \item \code{float}, 4 байта, 7 значащих цифр.
+                \item \code{double}, 8 байт, 15 значащих цифр.
+            \end{enumerate}
+        \item Логический тип данных \code{bool}.
+
+        \item Пустой тип \code{void}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Замечания касательно простых типов}
+    \begin{itemize}
+        \item Размеры многих типов ограничены только снизу так, 
+            например, тип int может быть размера 4 и 8 байт в зависимости от целевой платформы.
+        \item Существуют алиасы, гарантирующие размер типа,
+        они расположены в заголовочном файле \code{<cstdint>}:
+            \begin{enumerate}
+                \item \code{std::int32\_t}~--- знаковый, размера 32 бита (4 байта),
+                \item \code{std::uint32\_t}~--- беззнаковый, размера 32 бита (4 байта),
+                \item \code{std::int16\_t}~--- знаковый, размера 16 бит (2 байта),
+                \item \code{std::int8\_t}~--- знаковый, размера 8 бит (1 байта),
+                \item \code{std::int64\_t}~--- знаковый 64 бита (8 байт), 
+                \item и т.д.
+            \end{enumerate}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Замечания касательно простых типов}
+    \begin{itemize}
+        \item Для получения размера конкретного типа можно использовать оператор \code{sizeof}.
+        \item \code{sizeof(std::int32\_t) == 4}.
+        \item Для получения максимального, минимального значения,
+            можно использовать шаблон из заголовочного файла \code{<limits>}. 
+        \item Например:
+            \begin{enumerate}
+                \item \code{std::numeric\_limits<std::uint32\_t>::max()} $= 2^{32} - 1$
+                \item \code{std::numeric\_limits<std::int32\_t>::max()} $= 2^{31} - 1$
+            \end{enumerate}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Литералы}
+\begin{itemize}
+    \item Целочисленные:
+        \begin{enumerate}
+            \item \code{'a'}~--- код буквы 'a', тип \code{char},
+            \item \code{42} ~--- все целые числа по умолчанию типа \code{int},
+            \item \code{1234567890L}~--- суффикс '\code{L}' соответствует типу \code{long},
+            \item \code{1703U}~--- суффикс '\code{U}' соответствует типу \code{unsigned int},
+            \item \code{2128506UL}~--- соответствует типу \code{unsigned long}.
+        \end{enumerate}
+
+    \item Числа с плавающей точкой:
+        \begin{enumerate}
+            \item \code{3.14}~--- 
+                все числа с точкой по умолчанию типа \code{double},
+            \item \code{2.71F}~--- суффикс '\code{F}' соответствует типу 
+                \code{float},
+            \item \code{3.0E8}~--- соответствует $3.0\cdot 10^{8}$.
+        \end{enumerate}
+    \item \code{true} и \code{false}~--- значения типа \code{bool}.
+
+    \item Строки задаются в двойных кавычках: \verb!"Text string"!.
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Переменные}
+\begin{itemize}
+    \item При определении переменной указывается её тип. При определении можно
+        сразу задать начальное значение (инициализация).
+        \begin{lstlisting}
+int     i = 10;
+short   j = 20;
+bool    b = false;
+
+unsigned long l = 123123;
+
+double x = 13.5, y = 3.1415;
+float z;
+        \end{lstlisting}
+    \item Нужно всегда инициализировать переменные.
+    \item Нельзя определить переменную пустого типа \code{void}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Операции}
+    \begin{itemize}
+        \item Оператор присваивания: \code{=}.
+        \item Арифметические:
+        \begin{enumerate}
+            \item бинарные: \code{+ - * / \%},
+            \item унарные:  \code{++ {-}{-}}.
+        \end{enumerate}
+        \item Логические:
+        \begin{enumerate}
+            \item бинарные:  \code{\&\& ||},
+            \item унарные:   \code{!}. 
+        \end{enumerate}
+        \item Сравнения: \code{== != > < >= <= <=>}.
+        \item С-style приведение типов: \code{(type)}.
+        \item Сокращённые версии бинарных операторов:
+            \code{+= -= *= /= \%=}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Операции}
+    \begin{lstlisting}
+int i = 10; // initialize i with integer value
+i = (20 * 3) % 7; // integer calculations
+
+int k = i++; // post increment
+int l = --i; // pre decrement
+
+bool b = !(k == l); // logical expression
+// another logical expression
+b = (a == 0) || (1 / a < 1);
+auto p = k <=> l; // ordereing since C++20
+
+double d = 3.1415; // initialize d with integer value
+float f = (int)d; // cast d to float
+// floating point calculations
+d *= i + k; // equal to d = d * (i + k)
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Инструкции}
+    \begin{itemize}
+        \item Выполнение состоит из последовательности {\em инструкций}.
+        \item Инструкции выполняются одна за другой.
+        \item Порядок вычислений внутри инструкций не определён.
+            \begin{lstlisting}
+int i = 10;
+i = (i += 5) + (i * 4); // unspecified behavior
+            \end{lstlisting}
+        \item Блоки имеют вложенную область видимости:
+            \begin{lstlisting}
+int k = 10;                
+{   
+    int k = 5 * i;  // не видна за пределами блока
+    i = (k += 5) + 5; 
+}
+k = k + 1;
+            \end{lstlisting}
+
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Замечания касательно инструкций}
+    \begin{itemize}
+        \item В \langcpp существует несколько "особых состояний" программы,
+            которые описываются в стандарте.
+        \item Undefined behaviour~--- поведение программы не определено (может произойти все что угодно).
+            Например, переполнение знакового целого числа.
+            \begin{lstlisting}
+int i = std::numeric_limits<int>::max() + 1; // UB
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Замечания касательно инструкций}
+    \begin{itemize}
+        \item Unspecified behaviour~--- в определённых маргинальных ситуациях программа может выдавать результат, 
+            зависящий от реализации компилятора.
+            \begin{lstlisting}
+void foo(int a, int b, int c) {
+    std::cout << a << b << c; // prints a, b ,c
+}
+
+int i = 0;
+foo(++i, i++, i); // unspecified
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Условные операторы}
+    \begin{itemize}    
+        \item Оператор \code{if}:
+            \begin{lstlisting}
+int d = b * b - 4 * a * c;
+if (d > 0) {
+    roots = 2;
+} else if (d == 0) {  
+    roots = 1;
+} else {
+    roots = 0;
+}
+            \end{lstlisting}
+        \item Тернарный условный оператор:
+            \begin{lstlisting}
+int roots = 0;
+if (d >= 0)
+    roots = (d > 0 ) ? 2 : 1;
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Циклы}
+    \begin{itemize}    
+        \item Цикл \code{while}:
+            \begin{lstlisting}
+int squares = 0;
+int k = 0; 
+while (k < 10) {
+    squares += k * k;
+    k = k + 1;
+} 
+            \end{lstlisting}
+
+        \item Цикл \code{for}:
+            \begin{lstlisting}
+for (int k = 0; k < 10; k = k + 1) {
+    squares += k * k;
+} 
+            \end{lstlisting}
+        \item Для выхода из цикла используется оператор \code{break}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Функции}
+    \begin{itemize}
+        \item В сигнатуре функции указывается тип возвращаемого значений и типы параметров.
+        \item Ключевое слово \code{return} возвращает значение.
+            \begin{lstlisting}
+double square(double x) {
+    return x * x;
+}
+            \end{lstlisting}
+        \item Переменные, определённые внутри функций,~— {\em локальные}.
+        \item Функция может возвращать \code{void}.
+        \item Параметры передаются по значению (копируются).
+            \begin{lstlisting}
+void strange(double x, double y) {
+    x = y;
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Макросы}
+    \begin{itemize}
+        \item Макросами в \langcpp называют инструкции препроцессора.
+        \item Препроцессор \langcpp является самостоятельным языком,
+            работающим с произвольными строками.
+        \item Макросы можно использовать для определения функций:
+            \begin{lstlisting}
+int max1(int x, int y) { 
+    return x > y ? x : y;
+}
+
+#define max2(x, y)   x > y ? x : y
+
+a = b + max2(c, d); //  b + c > d ? c : d;
+            \end{lstlisting}
+        \item Препроцессор ``не знает'' про синтаксис \langcpp.
+    \end{itemize}
+\end{frame}
+    
+\begin{frame}[fragile]{Макросы}
+    \begin{itemize}
+        \item Параметры макросов нужно оборачивать в скобки:
+            \begin{lstlisting}
+#define max3(x, y)   ((x) > (y) ? (x) : (y))
+            \end{lstlisting}
+        \item Это не избавляет от всех проблем:
+            \begin{lstlisting}
+int a = 1;
+int b = 1;
+int c = max3(++a, b); 
+// c = ((++a) > (b) ? (++a) : (b))
+            \end{lstlisting}
+        \item Определять константы через макросы~--- плохая идея.
+        \item Определять функции через макросы~--- плохая идея.
+        \item Макросы можно использовать для условной компиляции:
+            \begin{lstlisting}
+#ifdef DEBUG
+    // дополнительные проверки
+#endif
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ввод-вывод}
+    \begin{itemize}    
+        \item Для консоли будем использовать библиотеку \code{<iostream>}.
+        \begin{lstlisting}
+#include <iostream>
+using namespace std;
+            \end{lstlisting}
+        \item Ввод:
+            \begin{lstlisting}
+int a = 0;
+int b = 0;
+cin >> a >> b;
+            \end{lstlisting}
+        \item Вывод:
+            \begin{lstlisting}
+cout << "a + b = " << (a + b) << endl;
+            \end{lstlisting}
+        \item Аналогичным образов осуществляется ввод-вывод из файла \code{<fstream>}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Простая программа}
+    \begin{lstlisting}
+#include <iostream>
+using namespace std;
+
+int main () 
+{
+    int a = 0;
+    int b = 0;
+
+    cout << "Enter a and b: ";
+    cin >> a >> b;
+
+    cout << "a + b = " << (a + b) << endl;
+
+    return 0;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Контракты при разработке программ}
+    \begin{itemize}
+        \item \code{assert(<expression>)} или \code{static\_assert(<expression>, <error-text>)} 
+            позволяют выполнять проверки во время исполенения и компиляции соотвественно.
+        \item Такие проверки удобны во время разработки больших программных продуктов и рефакторинга.
+        \item Важно отметить, что код для \code{assert(<expression>)} 
+            по умолчанию исполняется только в debug сборке.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Архитектура фон Неймана}
+    Современных компьютеры построены по принципам 
+    архитектуры фон Неймана:
+    \begin{enumerate}
+        \item {\bf Принцип однородности памяти.}\\
+            Команды и данные хранятся в одной и той же памяти и внешне в памяти неразличимы.
+        \item {\bf Принцип адресности.}\\
+            Память состоит из пронумерованных ячеек.
+        \item {\bf Принцип программного управления.}\\
+            Все вычисления представляются в виде последовательности команд.
+        \item {\bf Принцип двоичного кодирования.}\\
+            Вся информация (данные и команды) кодируются двоичными числами.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Сегментация памяти}
+    \begin{itemize}
+        \item Оперативная память, используемая в программе на C++,
+            разделена на области двух типов:
+            \begin{enumerate}
+                \item сегменты данных,
+                \item сегменты кода (текстовые сегменты).
+            \end{enumerate}
+        \item В сегментах кода содержится код программы.
+        \item В сегментах данных располагаются данные программы 
+            (значения переменных, массивы и пр.).
+        \item При запуске программы выделяются два сегмента данных:
+            \begin{enumerate}
+                \item сегмент глобальных данных,
+                \item стек.
+            \end{enumerate}
+        \item В процессе работы программы могут выделяться и освобождаться
+            дополнительные сегменты памяти.
+        \item Обращения к адресу вне выделенных сегментов~--- ошибка времени
+            выполнения (access violation, segmentation fault).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Как выполняется программа?}
+    \begin{itemize}
+        \item Каждой функции в скомпилированном коде соответствует отдельная
+            секция.
+        \item Адрес начала такой секции — это адрес функции.
+        \item Телу функции соответствует последовательность команд процессора.
+        \item Работа с данными происходит на уровне байт,
+            информация о типах отсутствует.
+        \item В процессе выполнения адрес следующей инструкции хранится 
+            в специальном регистре процессора IP (Instruction Pointer).
+        \item Команды выполняются последовательно, пока не встретится
+            специальная команда (например, условный переход или вызов 
+            функции), которая изменит IP.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ещё раз о линковке}
+    \begin{itemize}
+        \item На этапе компиляции объектных файлов
+            в места вызова функций подставляются имена функций.
+        \item На этапе линковки в места вызова вместо имён функций
+            подставляются их адреса.
+        \item Ошибки линковки:
+            \begin{enumerate}
+                \item {\tt undefined reference}\\
+                    Функция имеет объявление, но не имеет тела.
+
+                \item {\tt multiple definition}\\
+                    Функция имеет два или более определений.
+            \end{enumerate}
+        \item Наиболее распространённый способ получить 
+            {\tt multiple definition}~--- определить функцию
+            в заголовочном файле, который включён в несколько
+            {\tt .cpp} файлов.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Стек вызовов}
+    \begin{itemize}
+        \item Стек вызовов~— это сегмент данных, используемый для хранения локальных
+            переменных и временных значений.
+        \item Не стоит путать стек с одноимённой структурой данных, у~стека в \langcpp
+            можно обратиться к произвольной ячейке.
+        \item Стек выделяется при запуске программы.
+        \item Стек обычно небольшой по размеру (4Мб).
+        \item Функции хранят свои локальные переменные на стеке. 
+        \item При выходе из функции соответствующая область стека
+            объявляется свободной.
+        \item Промежуточные значения, возникающие при вычислении
+            сложных выражений, также хранятся на стеке.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Устройство стека}
+    \begin{minipage}{.5\textwidth}
+        \begin{tikzpicture}[
+            start chain=1 going below,node distance=-0.15mm
+            ]
+            \tikzstyle{cell} = [rectangle,minimum width=2cm,draw,thick,on chain=1];
+            \tikzstyle{function} = [cell, minimum height=1cm]; 
+            \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+
+            \node [function, fill=green!30]  (main) {main()};
+            \node<1,5> [cell, minimum height=45mm, dashed] (empty) {};
+
+            \node<2,4> [function, fill=blue!30]   (foo)  {foo()};
+            \node<2,4> [cell, minimum height=35mm, dashed] (empty) {};
+
+            \node<3> [function, fill=blue!30] (foo)  {foo()};
+            \node<3> [function, fill=orange!30] (bar)  {bar()};
+            \node<3> [cell, minimum height=25mm, dashed] (empty) {};
+
+            \node<6> [function, fill=orange!30] (bar)  {bar()};
+            \node<6> [cell, minimum height=35mm, dashed] (empty) {};
+
+            \node [right of=main, xshift=3cm, yshift=8mm] (bottom) {дно стека};
+            \path [arrow,->] (bottom) edge node {} (main.north east);
+
+            \node [right of=empty, xshift=3cm, yshift=-8mm] (top) {вершина стека};
+            \path [arrow,->] (top) edge node {} (empty.north east);
+        \end{tikzpicture}
+    \end{minipage}\hfill
+    \begin{minipage}{.4\textwidth}
+        \begin{lstlisting}
+void bar( ) {
+    int c;
+}
+
+void foo( ) {
+    int b = 3;
+    bar();
+}
+
+int main( ) {
+    int a = 3;    
+    foo();
+    bar();
+
+    return 0;
+}
+        \end{lstlisting}
+    \end{minipage}
+\end{frame}
+    
+\begin{frame}[fragile]{Вызов функции}
+    \begin{minipage}{.3\textwidth}
+    \small
+        \begin{tikzpicture}[
+            start chain=1 going below,node distance=-0.15mm
+            ]
+            \tikzstyle{cell} = [rectangle,minimum width=2cm, minimum height=5mm,,draw,thick,on chain=1];
+            \tikzstyle{function} = [cell, minimum height=1cm]; 
+            \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+            \tikzstyle{mbrace} = [decorate,decoration={brace,amplitude=5pt}];
+        
+            \node<1-8> [cell, fill=green!30] (x)   {\tt x = 1};
+            \node<9>   [cell, fill=red!30]   (x)   {\tt x = 2};
+            \node [cell, fill=green!30] (y)   {\tt y = 2};
+        
+        
+            \node<2-8> [cell, fill=green!30] (p3)   {\tt false};
+            \node<2-8> [cell, fill=green!30] (p2)   {\tt 2};
+            \node<2-8> [cell, fill=green!30] (p1)   {\tt 1};
+        
+        %    \draw[mbrace] 
+        %        (p3.north east)--(p1.south east) node[midway,anchor=west,xshift=6pt]
+        %        {аргументы};
+        
+            \node<3-6> [cell, fill=green!30] (retv)  {ret val};
+            \node<7-8> [cell, fill=red!30]   (retv)  {2};
+            \node<3-8> [cell, fill=green!30] (reta)  {ret addr};
+            \node<3-8> [cell, fill=green!30] (retr)  {registers};
+        
+        
+            %\draw<1-3>[mbrace] 
+            %    (x.north east)--(empty.north east) node[midway,anchor=west,xshift=6pt] {main};
+        
+        %    \node[right of=retv,xshift=21mm] {результат};
+        %    \node[right of=reta,xshift=15mm] {IP};
+        %    \node[right of=retr,xshift=21mm] {состояние};
+
+
+            \node<4-5> [cell, fill=blue!30] (d)   {\tt d};
+            \node<4-5> [cell, fill=blue!30] (h)   {\tt h};
+            \node<5>   [cell, fill=red!30] (tmp)  {\tt a * b = 2};
+            \node<6-7> [cell, fill=blue!30] (d)   {\tt d = 5.42};
+            \node<6-7> [cell, fill=blue!30] (h)   {\tt h = 2};
+        
+        
+            \node<1,9> [cell, minimum height=55mm, dashed] (empty) {};
+            \node<2> [cell, minimum height=40mm, dashed] (empty) {};
+            \node<3,8> [cell, minimum height=25mm, dashed] (empty) {};
+            \node<4> [cell, minimum height=15mm, dashed] (empty) {};
+            \node<5> [cell, minimum height=10mm, dashed] (empty) {};
+            \node<6-7> [cell, minimum height=15mm, dashed] (empty) {};
+
+            \node [right of=y,xshift=22mm] (fp) {\parbox{15mm}{frame\\ pointer}};
+            
+            \path<1-3,8-9> [arrow,->] (fp) edge node {} (x.north east);
+
+            \path<4-7> [arrow,->] (fp) edge node {} (d.north east);
+
+            %\draw<4> [mbrace] 
+            %    (d.north east)--(h.south east) node[midway,anchor=west,xshift=8pt] {foo};
+                                            
+            \node [right of=empty,xshift=22mm] (sp) {\parbox{15mm}{stack\\ pointer}};
+            \path [arrow,->] (sp) edge node {} (empty.north east);
+        \end{tikzpicture}
+    \end{minipage}\hfill
+    \begin{minipage}{.6\textwidth}
+        \begin{lstlisting}
+int foo(int a, int b, bool c) 
+{
+    double d = a * b * 2.71;
+    int    h = c ? d : d / 2;
+    return h;
+}
+
+int main( ) 
+{
+    int x = 1;
+    int y = 2;
+    x = foo (x, y, false);
+    cout << x;
+    return 0;
+}
+        \end{lstlisting}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}[fragile]{Вызов функции}
+    \begin{itemize}
+        \item При вызове функции на стек складываются:
+            \begin{enumerate}
+                \item aргументы функции,
+                \item адрес возврата,
+                \item значение frame pointer и регистров процессора.
+            \end{enumerate}
+        \item Кроме этого на стеке резервируется место под
+            возвращаемое значение.
+        \item Параметры передаются в обратном порядке, что позволяет
+            реализовать функции с переменным числом аргументов.
+        \item Адресация локальных переменных функции и аргументов
+            функции происходит относительно frame pointer.
+        \item Конкретный процесс вызова зависит от используемых 
+            соглашений (cdecl,  stdcall, fastcall, thiscall).
+    \end{itemize}
+\end{frame}
+
+\end{document}
+

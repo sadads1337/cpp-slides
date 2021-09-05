@@ -1,0 +1,59 @@
+%% CSCenter presentation theme for beamer
+%%
+%% Alexander Smal <avsmal@gmail.com>, 2013
+%%
+
+\ProvidesPackage{csc}[2013/11/26]
+\RequirePackage{cmap}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T2A]{fontenc}
+\RequirePackage[russian]{babel}
+\RequirePackage{xcolor}
+\RequirePackage{amssymb, amsmath}
+\RequirePackage{verbatim}
+\RequirePackage{tabularx}
+\RequirePackage{graphicx}
+\RequirePackage[]{listings}
+\RequirePackage{tikz}
+\RequirePackage{xspace}
+\RequirePackage[printwatermark]{xwatermark}
+\hypersetup{unicode}
+\RequirePackage{paratype}
+
+\setbeamersize{text margin left=20pt,text margin right=20pt}
+
+\usefonttheme[onlymath]{serif}
+
+\mode<presentation>
+{
+  \usetheme{CSCenter}
+}
+
+\usetikzlibrary{shapes.arrows,chains,decorations.pathreplacing}
+\usetikzlibrary{arrows, decorations.markings, shapes}
+\usetikzlibrary{positioning}
+
+\author{Илья Макаров}
+
+\definecolor{MOOCGrey}{RGB}{230,230,230}
+\definecolor{MOOCBlue}{RGB}{38,57,200}
+\definecolor{MOOCGreen}{RGB}{38,130,63}
+
+\newcommand{\code}[1]{{\color{MOOCBlue}{\tt #1}}}
+
+\lstset{extendedchars=true} 
+\lstset{language=C++, basicstyle=\small\ttfamily,  keywordstyle=\color{MOOCBlue},
+        commentstyle=\small\ttfamily\color{MOOCGreen}, showstringspaces=false,
+        extendedchars=true, texcl=true,
+        morekeywords={size_t,nullptr,static_assert,
+                      decltype,final,override,alignof,alignas, constexpr, noexcept}}
+\lstset{backgroundcolor=\color{MOOCGrey}}
+
+\newcommand{\pitem}{\pause\item}
+\newcommand{\langc}{\text{C}\xspace}
+\newcommand{\langcpp}[1][]{\text{C++#1}\xspace}
+
+\newcommand{\ql}{,,\relax}
+\newcommand{\qr}{``\xspace}
+\newcommand{\myq}[1]{\ql{#1}\qr}
+

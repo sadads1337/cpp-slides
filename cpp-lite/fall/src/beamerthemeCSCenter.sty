@@ -1,0 +1,43 @@
+% CSCenter presentation theme for beamer
+%
+% Alexander Smal <avsmal@gmail.com>, 2013
+%
+
+\ProvidesPackage{beamerthemeCSCenter}[2015/11/10]
+\RequirePackage{tabularx}
+
+\pgfdeclareimage[height=1cm]{logo}{logonew}
+
+\definecolor{CSCGrey}{RGB}{250,250,250}
+\definecolor{CSCBlue}{RGB}{103,141,158}
+\definecolor{CSCGreen}{RGB}{38,130,63}
+
+\usecolortheme[named=CSCBlue]{structure}
+
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{headline}{%
+\pgfpathrectanglecorners{\pgfpoint{0pt}{0pt}}{\pgfpoint{\paperwidth}{-.15\paperheight}}
+\pgfsetfillcolor{CSCBlue}
+\pgfusepath{fill}
+\pgftext[at=\pgfpoint{15pt}{-5pt},left,top]{\pgfuseimage{logo}}\hfill%
+\begin{tabularx}{.75\textwidth}{X}{\raisebox{-2.5em}{\color{white}{\normalsize\insertshorttitle}}}\end{tabularx}%
+\hskip 2em \vspace{-4em}
+}
+\setbeamertemplate{footline}{%
+ \begin{tabularx}{0.98\textwidth}{Xr}
+     \hfill\color{CSCBlue}\url{http://compscicenter.ru}\hfill\mbox{} & 
+   \hfill\insertframenumber\\
+ \end{tabularx}
+}
+
+\setbeamertemplate{frametitle}[default][center]
+\addtobeamertemplate{frametitle}{\vskip40pt}{}
+\setbeamerfont{frametitle}{series=\bfseries}
+\setbeamerfont{title}{series=\bfseries}
+
+\setbeamertemplate{itemize items}[circle]
+
+\setbeamercolor{background canvas}{bg=CSCGrey}
+
+\ProcessOptionsBeamer
+
