@@ -6,10 +6,10 @@
 \ProvidesPackage{beamerthemeCSCenter}[2015/11/10]
 \RequirePackage{tabularx}
 
-\pgfdeclareimage[height=1cm]{logo}{logonew}
+\pgfdeclareimage[width=25mm]{logo}{mse-logo}
 
 \definecolor{CSCGrey}{RGB}{250,250,250}
-\definecolor{CSCBlue}{RGB}{103,141,158}
+\definecolor{CSCBlue}{RGB}{100,100,140}
 \definecolor{CSCGreen}{RGB}{38,130,63}
 
 \usecolortheme[named=CSCBlue]{structure}
@@ -19,8 +19,8 @@
 \pgfpathrectanglecorners{\pgfpoint{0pt}{0pt}}{\pgfpoint{\paperwidth}{-.15\paperheight}}
 \pgfsetfillcolor{CSCBlue}
 \pgfusepath{fill}
-\pgftext[at=\pgfpoint{15pt}{-5pt},left,top]{\pgfuseimage{logo}}\hfill%
-\begin{tabularx}{.75\textwidth}{X}{\raisebox{-2.5em}{\color{white}{\normalsize\insertshorttitle}}}\end{tabularx}%
+\pgftext[at=\pgfpoint{5pt}{-5pt},left,top]{\pgfuseimage{logo}}\hfill%
+\begin{tabularx}{.72\textwidth}{X}{\raisebox{-3em}{\color{white}{\normalsize\textbf{\insertshorttitle}}}}\end{tabularx}%
 \hskip 2em \vspace{-4em}
 }
 \setbeamertemplate{footline}{%

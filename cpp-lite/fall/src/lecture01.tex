@@ -4,23 +4,25 @@
 
 
 \date{
-   \textbf{CS центр}\\
+   \textbf{ИТМО JB}\\
    7 сентября 2021\\
    Санкт-Петербург
 }
 
 \begin{document}
 
+
 \begin{frame}
   \titlepage
 \end{frame}
+
 
 \begin{frame}[fragile]{Некоторые вводные}
     Ожидается, что люди, пришедшие на курс:
     \begin{itemize}
         \item Имеют опыт программирования на любом языке программирования.
         \item Имеют базовые представления об ООП:
-            классы, объекты, икапсуляция, наследование и полиморфизм.
+            классы, объекты, инкапсуляция, наследование и полиморфизм.
         \item Знакомы с базовыми алгоритмами и структурами данных: 
             поиск, сортировка, линейный массив, хеш-таблица, \dots
     \end{itemize}
@@ -276,9 +278,9 @@
 
     \node [shift={(0mm,0mm)}] (programmer) {\includegraphics[height=1cm]{programmer}};
     \node [file,shift={(35mm,0cm)}]  (file1) {\parbox{14mm}{Архитектура приложения}};
-    \node [file,shift={(80mm,0cm)}]  (file2) {Код на \texttt{Perl}};
+    \node [file,shift={(80mm,0cm)}]  (file2) {Код на \texttt{Python}};
     \node [shift={(35mm,-3cm)},label=below:Интерпретатор,minimum
-    height=15mm,minimum width=15mm] (perl) {Perl};
+    height=15mm,minimum width=15mm] (perl) {Python};
     
     \node [shift={(80mm,-3cm)}] (computer) {\includegraphics[height=1cm]{computer}};
     \path [arrow,->] (programmer) edge node {Проектирование} (file1);
@@ -495,7 +497,7 @@ int main(int argc, char ** argv)
     \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile] {Компилиция этап №1: препроцессор}
+\begin{frame}[fragile] {Компиляции этап №1: препроцессор}
     \begin{itemize}
         \item Язык препроцессора -- это специальный язык программирования, 
             встроенный в \langcpp.
@@ -525,7 +527,7 @@ int main(int argc, char ** argv)
 
 \end{frame}
 
-\begin{frame}[fragile]{Компилиция этап  2: компиляция}
+\begin{frame}[fragile]{Компиляция этап  2: компиляция}
     \begin{itemize}
         \item На вход компилятору поступает код на \langcpp после обработки
             препроцессором.
@@ -544,7 +546,7 @@ int main(int argc, char ** argv)
 %При желании можно попросить компилятор транслировать код в ассемблер
 %(g++ -S program.cpp).
 
-\begin{frame}[fragile]{Компилиция этап 3: линковка (компоновка)}
+\begin{frame}[fragile]{Компиляция этап 3: линковка (компоновка)}
     \begin{itemize}
         \item На этом этапе все объектные файлы объединяются в один исполняемый 
             (или библиотечный) файл.
@@ -570,7 +572,7 @@ int main(int argc, char ** argv)
 %разных объектных файлах, то это тоже приведёт к ошибке, т.к. линковщик не сможет
 %определить какую из них использовать. 
 
-\begin{frame}[fragile]{Компилиция этап 3: линковка (компоновка)}
+\begin{frame}[fragile]{Компиляция этап 3: линковка (компоновка)}
     \begin{itemize}
         \item На этапе компоновки важно, что каждая функция имеет уникальное имя.
         \item В \langcpp может быть две функции с одним именем, но разными
@@ -957,7 +959,7 @@ int main ()
 \begin{frame}[fragile]{Контракты при разработке программ}
     \begin{itemize}
         \item \code{assert(<expression>)} или \code{static\_assert(<expression>, <error-text>)} 
-            позволяют выполнять проверки во время исполенения и компиляции соотвественно.
+            позволяют выполнять проверки во время исполнения и компиляции соответственно.
         \item Такие проверки удобны во время разработки больших программных продуктов и рефакторинга.
         \item Важно отметить, что код для \code{assert(<expression>)} 
             по умолчанию исполняется только в debug сборке.
@@ -1196,7 +1198,7 @@ int main( )
     \begin{itemize}
         \item При вызове функции на стек складываются:
             \begin{enumerate}
-                \item aргументы функции,
+                \item аргументы функции,
                 \item адрес возврата,
                 \item значение frame pointer и регистров процессора.
             \end{enumerate}
