@@ -1,0 +1,548 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 2. Переменные, ссылки, массивы}
+
+\date{
+   \textbf{ИТМО JB}\\
+   14 сентября 2021 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Еще раз о переменных}
+    \begin{itemize}
+        \item Имя переменной не должно начинаться с цифры.
+        \item Имя переменной не должно включать следующие символы: \\
+        \begin{enumerate}
+            \item {\tt ,} {\tt /}, {\tt :},
+            \item {\tt *}, {\tt ?}, {\tt .},
+            \item {\tt <}, {\tt >}, {\tt |},
+            \item \dots
+        \end{enumerate}
+        \item Имена, начинающиеся на \code{\_\_}, зарезирвированны стандартом. Например, \code{\_\_func\_\_}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Еще раз о времени жизни переменных}
+    \begin{itemize}
+        \item Переменные по времени жизни можно разделить на 2 типа: {\bf локальные} и {\bf глобальные}.
+        \item Глобальные существуют все время исполнения программы.
+        \item Локальные существуют в рамках определенной области~(scope).
+        \item Символы {\tt \{} и {\tt \}} соотвествуют началу и концу области видимости.
+        \item В реальности все чуть сложнее\dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Время жизни переменной}
+    Следует следить за временем жизни переменных.
+    \begin{lstlisting}
+int * foo() {
+    int a = 10;
+    return &a;
+}
+
+int & bar() {
+    int b = 20;
+    return b;
+}
+    \end{lstlisting}
+    \begin{lstlisting}
+int * p = foo(); // bad pointer
+int & l = bar(); // bad reference
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Как реализовать swap}
+    Рассмотрим функцию, меняющую параметры местами:
+    \begin{lstlisting}
+void swap(int a, int b) {
+    int t = a;
+    a = b;
+    b = t;
+}
+
+int main() {
+    int k = 10, m = 20;
+    swap(k, m);
+    std::cout << k << ' ' << m << endl; // 10 20
+    return 0;
+}
+    \end{lstlisting}
+    Проблема: {\tt swap} изменяет локальные копии переменных {\tt k} и {\tt m}.
+\end{frame}
+
+\begin{frame}[fragile]{Ссылки}
+    \begin{itemize}
+        \item {\bf Ссылка} — это некоторый "синоним" для имени переменной.
+        \item Ссылки бывают 2 типов: {\bf константная} и {\bf неконстантная}. Например:
+            \begin{lstlisting}
+int i = 3; // переменная типа int
+int & i_ref = i; // ссылка на i
+const int & i_cref = i; // константная ссылка на i
+            \end{lstlisting}
+        \item Аналогичные записи с некоторым "синтаксическим сахаром":
+            \begin{lstlisting}
+auto & i_ref = i;
+const auto & i_cref = i;
+int & const i_cref2 = i;
+auto & const i_cref2 = i;
+            \end{lstlisting}
+    \end{itemize}
+    {\bf Замечание}: Не путайте ссылки и указатели.
+\end{frame}
+
+\begin{frame}[fragile]{Передача параметров по ссылке}
+    Передадим наши параметры по ссылке:
+    \begin{lstlisting}
+void swap(int & a, int & b) {
+    int t = a;
+    a = b;
+    b = t;
+}
+
+int main() {
+    int k = 10, m = 20;
+    swap(k, m);
+    std::cout << k << ' ' << m << endl; // 20 10
+    return 0;
+}
+    \end{lstlisting}
+    Теперь {\tt swap} меняет местами переменные {\tt k} и {\tt m}.
+\end{frame}
+
+\begin{frame}[fragile]{Замечания}
+    \begin{itemize}
+        \item Пишите реализацию элементов из стандартной библиотеки только в образовательных целях.
+        \item Если что-то есть в стандартной библиотеке~--- используйте.
+        \item Скорее всего реализация стандартной библиотеки эффективнее.
+        \item Например, в стандартный алгоритм \code{std::swap} реализован в заголовочном файле \code{<utility>}.
+        \item Всегда есть но\dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Массивы}
+    \begin{itemize}
+        \item {\bf Массив}~--- это набор однотипных элементов, расположенных в памяти
+            друг за другом, доступ к которым осуществляется по индексу.
+        \item Массиву, как правило, соответствует непрерывный участок памяти.
+        \item Непрерывность участка дает преимущество~--- мы более эффективно используем кеш процессора.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические массивы}
+    \begin{itemize}
+        \item \langcpp позволяет определять массивы на стеке.
+        \item В стиле \langc:
+            \begin{lstlisting}
+// массив 1 2 3 4 5 0 0 0 0 0
+int m[10] = {1, 2, 3, 4, 5}; 
+            \end{lstlisting}
+        \item Аналог в стиле \langcpp:
+            \begin{lstlisting}
+#include <array>
+
+std::array<int, 10> m = {1, 2, 3, 4, 5}; 
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические массивы}
+    \begin{itemize}
+        \item Индексация массива начинается с \code{0}, последний элемент
+            массива длины {\tt n} имеет индекс {\tt n - 1}.
+            \begin{lstlisting}
+std::array<int, 10> m = {1, 2, 3, 4, 5}; 
+
+for (int i = 0; i < m.size(); ++i) {
+    std::cout << m[i] << ' '; 
+}
+            \end{lstlisting}
+        \item Или range based for:
+            \begin{lstlisting}
+for (const int & i : m) {
+    // i - ссылка на элемент из m
+    std::cout << i << ' '; 
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические массивы}
+    \begin{itemize}
+        \item \langcpp умеет выводить типы самостоятельно. Например:
+            \begin{lstlisting}
+for (const auto & i : m) {
+    std::cout << i << ' '; 
+}
+            \end{lstlisting}
+        \item Важно, что ссылка константная. 
+            Ведь мы не собираемся изменять содержимое нашего контейнера. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Динамические массивы}
+    \begin{itemize}
+        \item \langcpp позволяет определять массивы, 
+            размер которых не известен на момент компиляции.
+        \item В стиле \langcpp:
+            \begin{lstlisting}
+#include <vector>
+
+std::vector<int> m = {1, 2, 3, 4, 5}; 
+            \end{lstlisting}
+        \item В стиле \langc обсудим подробнее позже.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Динамические массивы}
+    \begin{itemize}
+    \item Аналогичным образом можем напечать наш динамический массив:
+        \begin{lstlisting}
+for (const auto & i : m) {
+    std::cout << i << ' '; 
+}
+        \end{lstlisting}
+    \item Или так:
+        \begin{lstlisting}
+for (auto i = 0; i < m.size(); ++i) {
+    std::cout << m[i] << ' '; 
+}
+        \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Почему следует использовать С++ массивы}
+    \begin{itemize}
+        \item Обеспечивают большую безопасность.
+        \item Достаточно унифицированы (имеют схожие интерфейсы).
+        \item "Дружат" с алгоритмами стандартной библиотеки.
+        \item Решают большинство ваших задач (не требуется изобретать свой велосипед).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Немного об STL}
+    \begin{itemize}
+        \item STL = Standard Template Library.
+        \item STL является частью стандартной библиотеки \langcpp, описана в стандарте, но не упоминается там явно.
+        \item Авторы: Александр Степанов, Дэвид Муссер и Менг Ли.
+        \item Основана на разработках для языка Ада.
+    \end{itemize}
+    Замечание: большинство подходов к разработке библиотек общего назначения и методик обобщенного программирования в целом, 
+        используемых в \langcpp, детально описаны в книге: А. Степанов "Начала программирования".
+\end{frame}
+
+\begin{frame}{Составляющие STL}
+    Можно выделить следующие основные составляющие:
+    \begin{itemize}
+        \item Контейнеры~--- способ хранения объектов в памяти.
+        \item Итераторы~--- унифицированный доступ к элементам контейнера.
+        \item Адаптеры~--- обёртки над контейнерами для более удобного использования.
+        \item Алгоритмы~--- работа с содержимым контейнеров.
+        \item Функциональные объекты, функторы (обобщение функций).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Чего нет в стандартной библиотеке}{}
+    \begin{itemize}
+        \item Cложных структур данных.
+        \item Cложных алгоритмов.
+        \item Работы с графикой/звуком.
+        \item \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Лямбда-выражения}
+    \begin{lstlisting}
+auto op = [](int x, int y) { return x / y; };
+
+// С++14
+auto op = [](auto x, auto y) { return x / y; };
+
+// то же, но с указанием типа возвращаемого значения
+auto op = [](int x, int y) -> int { return x / y; };
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Лямбда-выражения}    
+    Можно захватывать \emph{локальные} переменные.
+    \begin{lstlisting}
+int total = 0;
+
+// захват по ссылке
+auto f1 = [&total](int x) { total += x; };
+
+// захват по значению
+auto f2 = [total](int & x) { x -= total ; };
+
+// все по ссылке
+auto f3 = [&] { return total; }
+
+// все по значению
+auto f3 = [=] { return total; }
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Операции с массивами}
+    Сегодня рассмотрим только 2 контейнера:~\code{std::array} и \code{std::vector}, остальные рассмотрим позже.\\
+    Что можем поделать с нашими массивами? К примеру:
+    \begin{itemize}
+        \item Скопировать.
+        \item Отсортировать.
+        \item Применить некоторый функтор к элементам.
+        \item Отфильтровать (удалить элементы).
+        \item Применить алгоритмы из стандартной библиотеки.
+        \item \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Операции с массивами}
+    Как нам что-то сделать с содержимым массива?
+    \begin{itemize}
+        \item Написать цикл.
+        \item Или вызвать метод контейнера.
+        \item Или вызвать функцию из стандатной библотеки.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: сортировка массива}
+    \begin{itemize}
+        \item Объявим и заполним наш массив.
+            \begin{lstlisting}
+std::vector<int> m = {5, 2, 1, 3, 4};
+            \end{lstlisting}
+        \item Вариант 1. Пишем сортировку самостоятельно. Например, "пузырек":
+            \begin{lstlisting}
+for (auto i = 0; i < m.size(); ++i) {
+    for (auto j = 0; j < m.size() - i - 1; j++) {
+        if (m[j] > m[j + 1]) {
+            std::swap(m[j], m[j + 1]);
+        }
+    }
+}
+            \end{lstlisting}
+        \item Вариант 2. Используем алгоритм \code{std::sort}:
+            \begin{lstlisting}
+std::sort(m.begin(), m.end());
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: копирование массива}
+    \begin{itemize}
+        \item Объявим и заполним наш массив, создадим контейнер для копии.
+            \begin{lstlisting}
+std::vector<int> m = {5, 2, 1, 3, 4};
+std::vector<int> m_copy;
+            \end{lstlisting}
+        \item Вариант 1. Пишем самостоятельно:
+            \begin{lstlisting}
+for (const auto & i : m) {
+    m_copy.push_back(i);
+}
+            \end{lstlisting}
+        \item Вариант 2. Используем алгоритм \code{std::copy}:
+            \begin{lstlisting}
+std::copy(m.cbegin(), m.cend(), m_copy.end());
+            \end{lstlisting}
+        \item Вариант 3. Используем конструктор:
+            \begin{lstlisting}
+std::vector<int> m_copy(m.cbegin(), m.cend());
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: применение функции к массиву}
+    \begin{itemize}
+        \item Объявим и заполним наш массив-строку.
+            \begin{lstlisting}
+std::string s("hello");
+            \end{lstlisting}
+        \item Вариант 1. Пишем самостоятельно:
+            \begin{lstlisting}
+for (auto & c : s) {
+    c = std::toupper(c);
+}
+            \end{lstlisting}
+        \item Вариант 2. Используем \code{std::transform}:
+            \begin{lstlisting}
+const auto f = [](char c) { return std::toupper(c); }
+std::transform(s.begin(), s.end(), s.begin(), f);
+            \end{lstlisting}
+        \item Вариант 3. Используем другой алгоритм из STL:
+            \begin{lstlisting}
+std::for_each(s.begin(), s.end(),
+              [](char c) { std::toupper(c); });
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: удаление элементов из массива}
+    \begin{itemize}
+        \item Объявим и заполним наш массив.
+            \begin{lstlisting}
+std::vector<int> m(10);
+std::iota(m.begin(), m.end(), 0);
+            \end{lstlisting}
+        \item Вариант 1. Пишем самостоятельно:
+            \begin{lstlisting}
+for (auto it = m.begin(); it != m.end();) {
+    it = (*it % 2 == 0)
+        ? it = m.erase(it)
+        : std::next(it);
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: удаление элементов из массива}
+    \begin{itemize}
+        \item Вариант 2. Используем метод:
+            \begin{lstlisting}
+bool is_odd(int i) {
+    return i & 1;
+}
+
+m.erase(
+    std::remove_if(v.begin(), v.end(), is_odd),
+    v.end());
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: удаление элементов из массива}
+    \begin{itemize}
+        \item Вариант 3. Используем \code{std::erase}:
+            \begin{lstlisting}
+bool is_odd(int i) {
+    return i & 1;
+}
+
+std::erase_if(m, is_odd); // since C++20
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: удаление элементов из массива}
+    \begin{itemize}
+        \item Объявим и заполним наш массив-строку.
+            \begin{lstlisting}
+std::string s("hello");
+            \end{lstlisting}
+        \item Вариант 1. Вручную:
+            \begin{lstlisting}
+std::string s_copy = "";
+for (auto & c : s) {
+    if (c != 'l') {
+        s_copy += c;
+    }
+}
+            \end{lstlisting}
+        \item Вариант 2. Используем метод контейнера:
+            \begin{lstlisting}
+s.erase('l');
+            \end{lstlisting}
+        \item Вариант 3. Алгоритм \code{std::remove\_copy}:
+            \begin{lstlisting}
+std::remove_copy(str.begin(), str.end(),
+                 str.begin(), 'l');
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Пример: подсчет элементов, удовлевторяющих предикату}
+    \begin{itemize}
+        \item Объявим и заполним наш массив.
+            \begin{lstlisting}
+std::vector<int> m(10);
+std::iota(m.begin(), m.end(), 0);
+            \end{lstlisting}
+        \item Вариант 1. Вручную:
+            \begin{lstlisting}
+auto counter = 0u;
+for (auto & i : m) {
+    if (c % 2 == 0) {
+        ++counter;
+    }
+}
+            \end{lstlisting}
+        \item Вариант 2. Используем алгоритм:
+            \begin{lstlisting}
+std::count_if(m.cbegin(), m.cend(),
+              [](const auto & i) { return i % 2 == 0; });
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ranges}
+    \begin{itemize}
+        \item Упрощают работу с алгоритмами и контейнерами.
+        \item Появились в \langcpp[20]. Заголовочный файл \code{<ranges>}.
+        \item Не все алгоритмы, адаптеры, \dots были стандартизованы.
+        \item Остальная часть широкоиспользуемых вещей доступна в библиотеке RangesV3.
+        \item Почти все из RangesV3 скорее всего попадет в \langcpp[23].
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ranges примеры}
+    \begin{itemize}
+        \item Объявим и заполним наш массив.
+        \begin{lstlisting}
+std::vector<int> m(10);
+std::iota(m.begin(), m.end(), 0);
+            \end{lstlisting}
+        \item Определим наш предикат:
+            \begin{lstlisting}
+ const auto even = [](int i) { return i % 2 == 0; };
+            \end{lstlisting}
+        \item Напечатаем наш массив:
+            \begin{lstlisting}
+for (auto & i : m | std::views::filter(even)) {
+    std::cout << i << ' ';
+}
+            \end{lstlisting}
+        \item Другой вариант:
+            \begin{lstlisting}
+for (auto & i : std::views::filter(m, even)) {
+    std::cout << i << ' ';
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ranges примеры}
+    \begin{itemize}
+        \item Дополнительно определим функтор:
+            \begin{lstlisting}
+ const auto square = [](int i) { return i * i; };
+            \end{lstlisting}
+        \item Выполним композицию \code{even} и \code{square}:
+            \begin{lstlisting}
+for (auto & i : m | std::views::filter(even)
+                  | std::views::transform(square)) {
+    std::cout << i << ' ';
+}
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ranges примеры}
+    \begin{itemize}
+        \item Еще раз рассмотрим пример с подсчетом четных чисел:
+            \begin{lstlisting}
+const auto even = [](int i) { return i % 2 == 0; };
+const auto counter = std::ranges::count_if(m, even);
+            \end{lstlisting}
+        \item Копирование массива:
+            \begin{lstlisting}
+const auto m_copy = std::ranges::copy(
+    std::views::filter(m, even),
+    std::back_inserter(m_copy));
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\end{document}
