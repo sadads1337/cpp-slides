@@ -1,0 +1,210 @@
+% Home assignment "lazy_string"
+
+\documentclass[a4paper,10pt]{article}
+
+% Encoding support.
+\usepackage{cmap}  % makes pdf files generated with pdflatex scannable and searchable
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian,english]{babel}
+
+% For images
+\usepackage{graphicx}
+
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{hyperref}
+
+% Spaces after commas.
+\frenchspacing
+% Minimal carrying number of characters,
+\righthyphenmin=2
+
+% From K.V.Voroncov Latex in samples, 2005.
+\textheight=24cm   % text height
+\textwidth=16cm    % text width.
+\oddsidemargin=0pt % left side indention
+\topmargin=-1.5cm  % top side indention.
+\parindent=24pt    % paragraph indent
+\parskip=0pt       % distance between paragraphs.
+\tolerance=2000
+\flushbottom       % page height aligning
+\hoffset=0cm
+%\pagestyle{empty}  % without numeration
+
+% geometry
+\usepackage[a4paper,top=15mm]{geometry}
+
+% Indenting first paragraph.
+\usepackage{indentfirst}
+
+%\usepackage{setspace}
+%\linespread{1.5}
+
+\usepackage{enumitem}
+%\usepackage{datetime}
+
+% Listings
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyvrb}
+
+% Auto size brackets in math equations
+\usepackage{nath}
+\delimgrowth=1
+
+% To remove vertical space after title
+\usepackage{titling}
+
+% For directory listings
+\usepackage{dirtree}
+
+\begin{document}
+\selectlanguage{russian}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible
+}
+
+\newcommand{\cpp}[1]{{\tt #1}}
+
+\title{\includegraphics[height=15mm]{../CSCCPP}\\[1em]
+Домашнее задание \textnumero 5 \\ Класс \cpp{function}}
+\preauthor{}
+\author{}
+\postauthor{}
+\date{26 марта 2017}
+
+\maketitle
+
+\paragraph{Постановка задачи.}
+Реализуйте функциональность \cpp{std::function} из стандартной библиотеки C++ (стандарт 2011 года).
+\begin{lstlisting}[language=c++,frame=single]
+#include <functional>
+#include <iostream>
+ 
+void print_num(int i)
+{
+    std::cout << i << '\n';
+}
+ 
+struct PrintNum {
+    void operator()(int i) const
+    {
+        std::cout << i << '\n';
+    }
+};
+ 
+int main()
+{
+    // store a free function
+    std::function<void(int)> f_display = print_num;
+    f_display(-9);
+ 
+    // store a call to a function object
+    std::function<void(int)> f_display_obj = PrintNum();
+    f_display_obj(18);
+}
+\end{lstlisting}
+
+Ваш объект \cpp{function} должен частично реализовывать функционал стандартного
+\cpp{std::function}’a. А именно:
+\begin{enumerate}
+    \item Должен определяться прототипом функции, т.е. объявление объекта функции может
+        выглядеть следующим образом \cpp{function<void(int, double)>}.
+    \item Допускает конструирование:
+    \begin{enumerate}
+        \item от функции (или указателя на нее) с таким же прототипом, какой указан при
+        объявлении объекта function,
+        \item от функтора (объекта с оператором \cpp{()}),
+        \item от \cpp{nullptr},
+        \item без параметров.
+    \end{enumerate}
+    \item Предоставляет операторы:
+    \begin{enumerate}
+        \item (). Попытка передать параметры в этот оператор, которые не могут быть
+преобразованы к типам, принимаемым хранящимися внутри функтором или
+функцией, должны приводить к ошибке компиляции (а не времени выполнения).
+Оператор должен иметь возможность быть примененным к константному объекту.
+Возвращаемый тип должен соответствовать прототипу функции. Попытка вызвать
+данный оператор у пустого объекта \cpp{function} должна приводить к генерации
+исключения \cpp{fn::bad_function_call}, в противном случае оператор должен приводить
+к вызову хранящегося внутри функтора или функции.
+        \item Приведения к выражению логического типа. Для проверки на пустоту функции.
+    \end{enumerate}
+    \item Должны быть функции \cpp{swap} (как \cpp{member}, так и внешняя).
+    \item Обеспечивает копирование и перемещение (\cpp{move}).
+\end{enumerate}
+
+\paragraph{Общие требования.}
+\begin{enumerate}
+    \item Предполагается, что реализация использует variadic templates.
+    \item При передаче параметров функции должен использоваться perfect
+        forwarding (rvalue reference $+$ \cpp{std::forward}).
+\item Реализация не должна вводить дополнительных пессимизаций. Однако, если объект
+    \cpp{function} создан по функтору, то допускается:
+    \begin{enumerate}
+        \item неоптимизируемый компилятором косвенный вызов оператора \cpp{()};
+        \item выделение динамической памяти для хранения самого функтора.
+    \end{enumerate}
+    Во всех же остальных случаях следует максимально избегать накладных расходов, которые
+    возникают из-за использования \cpp{function}’a, которые компилятор не может
+    разрешить в силу недостаточности знаний о ваших намерениях.
+    
+\item Не забывайте о самодостаточности вашего заголовочного файла. Пользователь должен
+иметь возможность включить его в «пустой» cpp-шник и иметь возможность использовать
+ваш \cpp{function}. Также, не должно возникать warning’ов, если пользователь ваш
+заголовочный файл включил, но ничего из него не использует.
+    \item Ваша реализация должна обеспечивать строгую гарантию безопасности исключений.
+\end{enumerate}
+
+\paragraph{Подсказки.} 
+\begin{enumerate}
+    \item Для начала попробуйте реализовать всё, ограничившись функциями от
+        одного аргумента, и только потом добавьте возможность работы с
+        произвольным набором аргументов.
+
+    \item Для решения данной задачи вам потребуется придумать, как
+        хранить внутри объекта \cpp{function} объект произвольного типа (в примере выше
+        в объекте \cpp{function<void(int)>} в одном случае хранится указатель на
+        функцию, а в другом случае~--- функциональный объект). Подсказка: для этого нужно 
+        использовать смесь шаблонов и ООП.
+
+    \item Для корректной реализации вам обязательно нужно просмотреть набор
+        шаблонов для работы с типами \url{http://en.cppreference.com/w/cpp/types}.
+\end{enumerate}
+
+
+\paragraph{Формат сдачи.}
+Решение необходимо оформить в виде библиотеки, состоящей из одного заголовочного файла.
+Заголовочный файл должен называться {\tt fn.hpp}.
+
+Класс \cpp{function} и связанные определения типов должны быть реализованы в
+пространстве имен \cpp{fn}. Все необходимые вспомогательные классы и функции
+должны быть либо скрыты внутри класса \cpp{function}, либо находиться в
+пространстве имён \cpp{fn::details}.
+
+Допускается нахождение в репозитории рядом с файлом {\tt fn.hpp} вспомогательных
+файлов, которые вы можете использовать для тестирования вашей библиотеки, а
+также {\tt Makefile/CMakeLists.txt}, они не будут участвовать в проверке.
+
+Таким образом, ваша директория в Subversion должна выглядеть примерно следующим образом:
+\dirtree{%
+.1 ha5.
+.2 Makefile.
+.2 test.cpp.
+.2 fn.hpp.
+}
+
+\paragraph{Сроки сдачи.}
+Будет три срока, к которым можно будет сдавать домашнее задание:
+\begin{itemize}
+    \item 8:00 3 апреля 2017 (понедельник),
+    \item 8:00 10 апреля 2017 (понедельник), 
+    \item 8:00 17 апреля 2017 (понедельник).
+\end{itemize}
+Если домашнее задание не принимается с первой попытки, его
+можно попробовать сдать со следующей попытки.
+
+\end{document}

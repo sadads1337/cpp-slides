@@ -1,0 +1,168 @@
+% Home assignment "linked_ptr"
+
+\documentclass[a4paper,10pt]{article}
+
+% Encoding support.
+\usepackage{cmap}  % makes pdf files generated with pdflatex scannable and searchable
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian,english]{babel}
+
+% For images
+\usepackage{graphicx}
+
+\usepackage{amsmath, amsthm, amssymb}
+
+% Spaces after commas.
+\frenchspacing
+% Minimal carrying number of characters,
+\righthyphenmin=2
+
+% From K.V.Voroncov Latex in samples, 2005.
+\textheight=24cm   % text height
+\textwidth=16cm    % text width.
+\oddsidemargin=0pt % left side indention
+\topmargin=-1.5cm  % top side indention.
+\parindent=24pt    % paragraph indent
+\parskip=0pt       % distance between paragraphs.
+\tolerance=2000
+\flushbottom       % page height aligning
+\hoffset=0cm
+%\pagestyle{empty}  % without numeration
+
+% geometry
+\usepackage[a4paper,top=15mm]{geometry}
+
+% Indenting first paragraph.
+\usepackage{indentfirst}
+
+%\usepackage{setspace}
+%\linespread{1.5}
+
+\usepackage{enumitem}
+%\usepackage{datetime}
+
+% Listings
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyvrb}
+
+% Auto size brackets in math equations
+\usepackage{nath}
+\delimgrowth=1
+
+% To remove vertical space after title
+\usepackage{titling}
+
+% For directory listings
+\usepackage{dirtree}
+
+\begin{document}
+\selectlanguage{russian}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible
+}
+
+\newcommand{\cpp}[1]{{\tt #1}}
+
+\title{\includegraphics[height=15mm]{../CSCCPP}\\[1em]
+Домашнее задание \textnumero 3 \\ Умный указатель \cpp{linked\_ptr}}
+\preauthor{}
+\author{}
+\postauthor{}
+\date{13 ноября 2017}
+
+\maketitle
+
+\paragraph{Постановка задачи.}
+
+Разработайте шаблонный класс \cpp{linked\_ptr<T>}, реализующий RAII обертку над указателем.
+Шаблонным параметром является тип, указатель на который моделирует \cpp{linked\_ptr}.
+
+\paragraph{Описание.} \cpp{linked\_ptr}~--- умный указатель (т.\,е. обёртка над обычным указателем), позволяющий совместно использовать хранимый указатель из нескольких экземпляров класса \cpp{linked\_ptr}.
+Память по указателю, хранимому в \cpp{linked\_ptr}, будет освобождена только тогда, когда все экземпляры \cpp{linked\_ptr}, хранящие этот указатель, будут уничтожены, либо из них этот указатель будет явно высвобожден.
+
+При копировании умного указателя \cpp{a} в \cpp{b} (или при инициализации \cpp{b(a)}), в \cpp{a} добавляется указатель на \cpp{b}, а в \cpp{b}~--- указатель на \cpp{a}.
+Таким образом, все экземпляры класса \cpp{linked\_ptr}, которые хранят один и тот же указатель, оказываются в двусвязном списке~--- отсюда и название данного умного указателя.
+
+По своей функциональности \cpp{linked\_ptr} практически эквивалентен \cpp{std::shared\_ptr}.
+По сравнению с последним \cpp{linked\_ptr} обладает меньшим временем инициализации,
+т.\,к. не выделяет дополнительных блоков памяти (как \cpp{shared\_ptr} для счетчика ссылок),
+а хранит все указатели, работающие с одним объектом, в списке. Впрочем, такая реализация требует от \cpp{linked\_ptr} большего времени на копирование и удаление, нежели \cpp{shared\_ptr}.
+
+\paragraph{Требования.}
+\begin{enumerate}
+ \item Ваша реализация должна соответствовать описанной выше идее поддержания связанных указателей в общем списке.
+ \item В реализации не должно быть выделений динамической памяти, которые можно избежать.
+ Таким образом, например, нельзя использовать \cpp{std::list} для хранения элементов в списке.
+ \item Связывание и удаление умного указателя из общего списка должно выполняться за $O(1)$.
+ \item Реализация должна обеспечивать требование определения типа параметра шаблона к моменту его удаления из деструктора \cpp{linked\_ptr}.
+ \item Интерфейс \cpp{linked\_ptr} должен содержать следующие методы, аналогичные методам \cpp{std::shared\_ptr}:
+ \begin{enumerate}
+  \item Конструкторы \cpp{linked\_ptr<T>}:
+  \begin{enumerate}
+   \item без параметров;
+   \item от \cpp{T *}, константного \cpp{linked\_ptr<T>};
+   \item а также от \cpp{U *} и \cpp{linked\_ptr<U>}, если \cpp{U *} неявно приводим к \cpp{T *}.
+  \end{enumerate}
+  \item Конструкторы от одного аргумента не должны задавать дополнительное приведение типа.
+  \item Операторы присваивания от \cpp{linked\_ptr<T>} и \cpp{linked\_ptr<U>}.
+  Условия аналогичны конструкторам.
+  \item Семейство функций \cpp{reset}:
+   \begin{enumerate}
+    \item без параметров;
+    \item от \cpp{T *};
+    \item от \cpp{U *} (см.~выше).
+   \end{enumerate}
+  \item методы \cpp{swap()}, \cpp{get()}, \cpp{unique()} аналогичные методам из \cpp{std::shared\_ptr}.
+  \item Операторы \cpp{->} и разыменования.
+  \item Операторы проверки на равенство/неравенство.
+  \item Операторы сравнения (например, для использования экземпляров \cpp{linked\_ptr<T>} в качестве элементов \cpp{std::set}).
+  \item Безопасное приведение к логическому выражению.
+ \end{enumerate}
+ \item Реализация должна соответствовать требованиям из Правил сдачи,
+ т.\,е., например, в ней не должно быть утечек памяти,
+ она должна быть оформлена в соответствии с указанными принципами кодирования и т.\,п.
+\end{enumerate}
+
+\paragraph{Дополнительное задание.}
+При использовании вашего класса с неким шаблонным параметром \cpp{C} требуйте полностью определённый тип параметра шаблона \cpp{C} только в момент инициализации переменной типа \cpp{linked\_ptr<C>}, но не, например, в момент объявления переменной типа \cpp{linked\_ptr<C>}.
+
+\paragraph{Примечания.}
+\begin{itemize}
+ \item Т.\,к. интерфейс \cpp{linked\_ptr} является подмножеством \cpp{std::shared\_ptr}, настоятельно рекомендуется использовать интерфейс \cpp{std::shared\_ptr} в качестве образца.
+ Явно не специфицированная в данном задании функциональность должна работать также, как в \cpp{std::shared\_ptr}, например,
+ см.~как работает \cpp{unique()} на неинициализированном \cpp{std::shared\_ptr}.
+\end{itemize}
+
+\paragraph{Формат сдачи.}
+Решение необходимо оформить в виде библиотеки, состоящей из одного заголовочного файла.
+Заголовочный файл должен называться {\tt linked\_ptr.hpp}.
+
+Класс \cpp{linked\_ptr} должен находиться в пространстве имён \cpp{smart\_ptr}.
+Все необходимые вспомогательные классы и функции должны быть либо скрыты внутри класса \cpp{linked\_ptr}, либо находиться в пространстве имён \cpp{smart\_ptr::details}.
+
+Допускается нахождение в репозитории рядом с файлом {\tt linked\_ptr.hpp} вспомогательных файлов, которые вы можете использовать для тестирования вашей библиотеки, а также {\tt Makefile/CMakeLists.txt}, они не будут участвовать в проверке.
+
+Таким образом, ваша директория в Subversion должна выглядеть примерно следующим образом:
+\dirtree{%
+.1 ha3.
+.2 Makefile.
+.2 test.cpp.
+.2 linked\_ptr.hpp.
+}
+
+\paragraph{Сроки сдачи.}
+Будет три срока, к которым можно будет сдавать домашнее задание:
+\begin{itemize}
+    \item 8:00 20 ноября (понедельник),
+    \item 8:00 27 ноября (понедельник),
+    \item 8:00 04 декабря (понедельник).
+\end{itemize}
+Если домашнее задание не принимается с первой попытки, его
+можно попробовать сдать со следующей попытки.
+
+\end{document}

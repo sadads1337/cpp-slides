@@ -1,0 +1,184 @@
+% Home assignment "bind"
+
+\documentclass[a4paper,10pt]{article}
+
+% Encoding support.
+\usepackage{cmap}  % makes pdf files generated with pdflatex scannable and searchable
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian,english]{babel}
+
+% For images
+\usepackage{graphicx}
+
+\usepackage{amsmath, amsthm, amssymb}
+\usepackage{hyperref}
+
+% Spaces after commas.
+\frenchspacing
+% Minimal carrying number of characters,
+\righthyphenmin=2
+
+% From K.V.Voroncov Latex in samples, 2005.
+\textheight=24cm   % text height
+\textwidth=16cm    % text width.
+\oddsidemargin=0pt % left side indention
+\topmargin=-1.5cm  % top side indention.
+\parindent=24pt    % paragraph indent
+\parskip=0pt       % distance between paragraphs.
+\tolerance=2000
+\flushbottom       % page height aligning
+\hoffset=0cm
+%\pagestyle{empty}  % without numeration
+
+% geometry
+\usepackage[a4paper,top=15mm]{geometry}
+
+% Indenting first paragraph.
+\usepackage{indentfirst}
+
+%\usepackage{setspace}
+%\linespread{1.5}
+
+\usepackage{enumitem}
+%\usepackage{datetime}
+
+% Listings
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{fancyvrb}
+
+% Auto size brackets in math equations
+\usepackage{nath}
+\delimgrowth=1
+
+% To remove vertical space after title
+\usepackage{titling}
+
+% For directory listings
+\usepackage{dirtree}
+
+\begin{document}
+\selectlanguage{russian}
+
+\lstset{
+  basicstyle=\ttfamily,
+  columns=fullflexible
+}
+
+\newcommand{\cpp}[1]{{\tt #1}}
+
+\title{\includegraphics[height=15mm]{../CSCCPP}\\[1em]
+Домашнее задание \textnumero 6 \\ Функция \cpp{bind}}
+\preauthor{}
+\author{}
+\postauthor{}
+\date{22 апреля 2017}
+
+\maketitle
+
+\paragraph{Постановка задачи.}
+Реализуйте функциональность \cpp{std::bind} из стандартной библиотеки C++ (стандарт 2011 года).
+\begin{lstlisting}[language=c++,frame=single]
+#include <iostream>
+#include <functional>
+ 
+void f(int n1, int n2)
+{
+    std::cout << n1 << ' ' << n2 << '\n';
+}
+ 
+int g(int n1)
+{
+    return n1;
+}
+ 
+int main()
+{
+    using namespace std::placeholders;
+ 
+    // demonstrates argument reordering
+    auto f1 = std::bind(f, _2, _1);
+    f1(1, 2, 1001); // 1 is bound by _1, 2 is bound by _2, 1001 is unused
+
+    auto f2 = std::bind(g, 10);
+    int x = f2(); // x = g(10)
+}
+\end{lstlisting}
+
+Ваша функция \cpp{bind} должна частично реализовывать функционал стандартной
+функции \cpp{std::bind}’a. А именно:
+\begin{enumerate}
+    \item Позволяет зафиксировать (забиндить) обычную свободную функцию (передачу
+        функтора или member функции можно не поддерживать).
+    \item Можно зафиксировать любые подходящие значения в качестве параметра функции.
+    \item Можно зафиксировать плейсхолдер (\verb!_1! и/или \verb!_2!), обозначающие какой аргумент
+        при вызове будет подставляться в качестве текущего аргумента функции.
+    \item Функция \cpp{bind} (назовем биндер) создает объект, который допускает его вызов по
+        оператору \cpp{()}. Переданные параметры вместе с зафиксированными должны приводиться
+        к типам, ожидаемым зафиксированной функцией. В противном случае такой вызов не
+        должен компилироваться.
+    \item Биндер допускает вызов по оператору () с б\'{о}льшим количеством аргументов, чем
+        это может предполагать переданная в \cpp{bind} функция с возможно зафиксированными
+        аргументами. Лишние аргументы игнорируются. В «общих требованиях» описаны
+        ограничения на количество параметров.
+    \item Биндер допускает копирование и присваивание. Move биндера допускается, если
+        все зафиксированные аргументы допускают \cpp{move}.
+    \item Тип, возвращаемый оператором () объекта биндера, должен соответствовать
+        возвращаемому типу переданной в bind функции.
+\end{enumerate}
+
+\paragraph{Общие требования.}
+\begin{enumerate}
+    \item Предполагается, что реализация использует variadic templates.
+    \item Вводится     ограничение на количество плейсхолдеров. Есть только
+        \verb!_1! и \verb!_2!.
+    \item Реализация \cpp{bind}’a должна корректно работать как с передачей
+        аргументов по значению, так и со ссылками (как константными, так и 
+        неконстантными). 
+    \item При передаче параметров функции должен использоваться perfect
+        forwarding (rvalue reference $+$ \cpp{std::forward}).
+    \item Реализация не должна вводить дополнительных пессимизаций. 
+        Cледует максимально избегать накладных расходов, которые
+        возникают из-за использования \cpp{bind}’a, которые компилятор не
+        может  разрешить в силу недостаточности знаний о ваших намерениях.
+    \item Функция bind,  должны находиться в \cpp{namespace
+        fn}.
+        Функция \cpp{bind}, \verb!_1!, \verb!_2! и связанные определения типов должны быть реализованы в пространстве имен \cpp{fn}.
+        Все необходимые вспомогательные классы и функции должны находиться в пространстве имён \cpp{fn::details}.
+    \item Не забывайте о самодостаточности вашего заголовочного файла. Пользователь
+        должен иметь возможность включить его в «пустой» cpp-шник и иметь возможность
+        использовать ваш \cpp{bind}. Также, не должно возникать warning’ов, если
+        пользователь ваш хидер включил, но ничего из него не использует.
+    \item Ваша реализация должна обеспечивать строгую гарантию безопасности
+        исключений.
+\end{enumerate}
+
+\paragraph{Формат сдачи.}
+Решение необходимо оформить в виде библиотеки, состоящей из одного заголовочного файла.
+Заголовочный файл должен называться {\tt bind.hpp}.
+
+Допускается нахождение в репозитории рядом с файлом {\tt bind.hpp} вспомогательных
+файлов, которые вы можете использовать для тестирования вашей библиотеки, а
+также {\tt Makefile/CMakeLists.txt}, они не будут участвовать в проверке.
+
+Таким образом, ваша директория в Subversion должна выглядеть примерно следующим образом:
+\dirtree{%
+.1 ha6.
+.2 Makefile.
+.2 test.cpp.
+.2 bind.hpp.
+}
+
+\paragraph{Сроки сдачи.}
+Будет три срока, к которым можно будет сдавать домашнее задание:
+\begin{itemize}
+    \item 8:00 30 апреля 2017 (воскресенье),
+    \item 8:00 7 мая 2017 (воскресенье),
+    \item 8:00 14 мая 2017 (воскресенье).
+\end{itemize}
+Если домашнее задание не принимается с первой попытки, его
+можно попробовать сдать со следующей попытки.
+
+\end{document}
