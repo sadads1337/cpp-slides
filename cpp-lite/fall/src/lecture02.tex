@@ -27,35 +27,6 @@
     \end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Еще раз о времени жизни переменных}
-    \begin{itemize}
-        \item Переменные по времени жизни можно разделить на 2 типа: {\bf локальные} и {\bf глобальные}.
-        \item Глобальные существуют все время исполнения программы.
-        \item Локальные существуют в рамках определенной области~(scope).
-        \item Символы {\tt \{} и {\tt \}} соотвествуют началу и концу области видимости.
-        \item В реальности все чуть сложнее\dots
-    \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Время жизни переменной}
-    Следует следить за временем жизни переменных.
-    \begin{lstlisting}
-int * foo() {
-    int a = 10;
-    return &a;
-}
-
-int & bar() {
-    int b = 20;
-    return b;
-}
-    \end{lstlisting}
-    \begin{lstlisting}
-int * p = foo(); // bad pointer
-int & l = bar(); // bad reference
-    \end{lstlisting}
-\end{frame}
-
 \begin{frame}[fragile]{Как реализовать swap}
     Рассмотрим функцию, меняющую параметры местами:
     \begin{lstlisting}
@@ -68,7 +39,7 @@ void swap(int a, int b) {
 int main() {
     int k = 10, m = 20;
     swap(k, m);
-    std::cout << k << ' ' << m << endl; // 10 20
+    std::cout << k << ' ' << m << std::endl; // 10 20
     return 0;
 }
     \end{lstlisting}
@@ -77,14 +48,14 @@ int main() {
 
 \begin{frame}[fragile]{Ссылки}
     \begin{itemize}
-        \item {\bf Ссылка} — это некоторый "синоним" для имени переменной.
+        \item {\bf Ссылка} — это некоторый ``синоним’’ для имени переменной.
         \item Ссылки бывают 2 типов: {\bf константная} и {\bf неконстантная}. Например:
             \begin{lstlisting}
 int i = 3; // переменная типа int
 int & i_ref = i; // ссылка на i
 const int & i_cref = i; // константная ссылка на i
             \end{lstlisting}
-        \item Аналогичные записи с некоторым "синтаксическим сахаром":
+        \item Аналогичные записи с некоторым ``синтаксическим сахаром’’:
             \begin{lstlisting}
 auto & i_ref = i;
 const auto & i_cref = i;
@@ -107,7 +78,7 @@ void swap(int & a, int & b) {
 int main() {
     int k = 10, m = 20;
     swap(k, m);
-    std::cout << k << ' ' << m << endl; // 20 10
+    std::cout << k << ' ' << m << std::endl; // 20 10
     return 0;
 }
     \end{lstlisting}
@@ -122,6 +93,55 @@ int main() {
         \item Например, в стандартный алгоритм \code{std::swap} реализован в заголовочном файле \code{<utility>}.
         \item Всегда есть но\dots
     \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Указатели}
+    \begin{itemize}
+        \item Указатель — это переменная, хранящая адрес некоторой 
+            ячейки памяти.
+        \item Указатели являются типизированными.
+\begin{lstlisting}
+int i = 3;
+// указатель на переменную типа int
+int * p = nullptr;
+\end{lstlisting}
+        \item Нулевому указателю (которому присвоено значение \code{0} или \code{nullptr}) не~соответствует никакая ячейка памяти.
+        \item Оператор взятия адреса переменной \code{\&}.
+        \item Оператор разыменования \code{*}.
+            \begin{lstlisting}
+p  = &i; // указатель p указывает на переменную i
+*p = 10; // изменяется ячейка по адресу p, т.е. i
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Еще раз о времени жизни переменных}
+    \begin{itemize}
+        \item Переменные по времени жизни можно разделить на 2 типа: {\bf локальные} и {\bf глобальные}.
+        \item Глобальные существуют все время исполнения программы.
+        \item Локальные существуют в рамках определенной области~(scope).
+        \item Символы \code{\{} и \code{\}} соотвествуют началу и концу области видимости.
+        \item В реальности все чуть сложнее\dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Время жизни переменной}
+    Следует следить за временем жизни переменных.
+    \begin{lstlisting}
+int * foo() {
+    int a = 10;
+    return &a;
+}
+
+int & bar() {
+    int b = 20;
+    return b;
+}
+    \end{lstlisting}
+    \begin{lstlisting}
+int * p = foo(); // bad pointer
+int & l = bar(); // bad reference
+    \end{lstlisting}
 \end{frame}
 
 \begin{frame}[fragile]{Массивы}
@@ -163,9 +183,9 @@ for (int i = 0; i < m.size(); ++i) {
             \end{lstlisting}
         \item Или range based for:
             \begin{lstlisting}
-for (const int & i : m) {
-    // i - ссылка на элемент из m
-    std::cout << i << ' '; 
+for (int x : m) {
+    // x - ссылка на элемент из m
+    std::cout << x << ' '; 
 }
             \end{lstlisting}
     \end{itemize}
@@ -219,7 +239,7 @@ for (auto i = 0; i < m.size(); ++i) {
     \begin{itemize}
         \item Обеспечивают большую безопасность.
         \item Достаточно унифицированы (имеют схожие интерфейсы).
-        \item "Дружат" с алгоритмами стандартной библиотеки.
+        \item ``Дружат’’ с алгоритмами стандартной библиотеки.
         \item Решают большинство ваших задач (не требуется изобретать свой велосипед).
     \end{itemize}
 \end{frame}
@@ -232,7 +252,7 @@ for (auto i = 0; i < m.size(); ++i) {
         \item Основана на разработках для языка Ада.
     \end{itemize}
     Замечание: большинство подходов к разработке библиотек общего назначения и методик обобщенного программирования в целом, 
-        используемых в \langcpp, детально описаны в книге: А. Степанов "Начала программирования".
+        используемых в \langcpp, детально описаны в книге: А. Степанов ``Начала программирования’’.
 \end{frame}
 
 \begin{frame}{Составляющие STL}
@@ -314,7 +334,7 @@ auto f3 = [=] { return total; }
             \begin{lstlisting}
 std::vector<int> m = {5, 2, 1, 3, 4};
             \end{lstlisting}
-        \item Вариант 1. Пишем сортировку самостоятельно. Например, "пузырек":
+        \item Вариант 1. Пишем сортировку самостоятельно. Например, \enquote{пузырек}:
             \begin{lstlisting}
 for (auto i = 0; i < m.size(); ++i) {
     for (auto j = 0; j < m.size() - i - 1; j++) {
@@ -403,7 +423,7 @@ for (auto it = m.begin(); it != m.end();) {
         \item Вариант 2. Используем метод:
             \begin{lstlisting}
 bool is_odd(int i) {
-    return i & 1;
+    return i % 2 == 1;
 }
 
 m.erase(
@@ -418,7 +438,7 @@ m.erase(
         \item Вариант 3. Используем \code{std::erase}:
             \begin{lstlisting}
 bool is_odd(int i) {
-    return i & 1;
+    return i % 2 == 1;
 }
 
 std::erase_if(m, is_odd); // since C++20
@@ -463,7 +483,7 @@ std::iota(m.begin(), m.end(), 0);
         \item Вариант 1. Вручную:
             \begin{lstlisting}
 auto counter = 0u;
-for (auto & i : m) {
+for (const auto c : m) {
     if (c % 2 == 0) {
         ++counter;
     }
