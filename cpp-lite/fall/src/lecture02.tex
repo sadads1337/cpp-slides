@@ -411,7 +411,7 @@ std::iota(m.begin(), m.end(), 0);
             \begin{lstlisting}
 for (auto it = m.begin(); it != m.end();) {
     it = (*it % 2 == 0)
-        ? it = m.erase(it)
+        ? m.erase(it)
         : std::next(it);
 }
             \end{lstlisting}
@@ -467,6 +467,7 @@ s.erase('l');
             \end{lstlisting}
         \item Вариант 3. Алгоритм \code{std::remove\_copy}:
             \begin{lstlisting}
+// s = "heolo", erase it to fix.
 std::remove_copy(str.begin(), str.end(),
                  str.begin(), 'l');
             \end{lstlisting}
