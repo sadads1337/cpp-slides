@@ -1,0 +1,836 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 3. Структуры данных и классы}
+
+\date{
+   \textbf{CS центр}\\
+   21 сентября 2017 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Зачем группировать данные?}
+    Какая должна быть сигнатура у функции, которая вычисляет длину отрезка на
+    плоскости?
+    \begin{lstlisting}
+double length(double x1, double y1, 
+              double x2, double y2);
+    \end{lstlisting}
+    А сигнатура функции, проверяющей пересечение отрезков?
+    \begin{lstlisting}
+bool intersects(double x11, double y11, 
+                double x12, double y12,
+                double x21, double y21, 
+                double x22, double y22,
+                double * xi, double * yi);
+    \end{lstlisting}
+Координаты точек являются логически связанными данными, которые всегда передаются
+вместе.\\
+Аналогично связанны координаты точек отрезка.
+\end{frame}
+
+\begin{frame}[fragile]{Структуры}
+    Структуры~--- это способ синтаксически (и физически)
+    сгруппировать логически связанные данные.
+    \begin{lstlisting}
+struct Point {
+    double x;
+    double y;
+};
+struct Segment {
+    Point p1;
+    Point p2;
+};
+
+double length(Segment s);  
+
+bool intersects(Segment s1, 
+                Segment s2, Point * p);
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Работа со структурами}
+    Доступ к полям структуры осуществляется через
+    оператор '\code{.}':
+    \begin{lstlisting}
+#include <cmath>
+
+double length(Segment s) {
+    double dx = s.p1.x - s.p2.x;
+    double dy = s.p1.y - s.p2.y;
+    return sqrt(dx * dx + dy * dy);
+}
+    \end{lstlisting}
+    Для указателей на структуры используется оператор '\code{->}'.
+    \begin{lstlisting}
+double length(Segment * s) {
+    double dx = s->p1.x - s->p2.x;
+    double dy = s->p1.y - s->p2.y;
+    return sqrt(dx * dx + dy * dy);
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Инициализация структур}
+    Поля структур можно инициализировать подобно массивам:
+    \begin{lstlisting}
+Point p1 = { 0.4, 1.4 };
+Point p2 = { 1.2, 6.3 };
+Segment s = { p1, p2 };
+    \end{lstlisting}
+    Структуры могут хранить переменные разных типов.
+    \begin{lstlisting}
+struct IntArray2D {
+    size_t a;
+    size_t b;
+    std::vector<int> data;
+};
+    \end{lstlisting}
+    \begin{lstlisting}
+IntArray2D a = {n, m, create_array2d(n, m)};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{POD типы}
+    \code{POD-типы} в языке \langcpp это аббревиатура от Plain Old Data, 
+    что можно трактовать как простые данные в стиле \langc.\\
+    К POD типам относятся:
+    \begin{itemize}
+        \item все встроенные арифметические типы (включая wchar\_t и bool);
+        \item перечисления, т.е. типы, объявленные с помощью ключевого слова enum;
+        \item указатели;
+        \item POD-структуры (struct или class) и POD-объединения (union).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{POD типы}
+    Чтобы структура была POD-типом, нужно выполнение следующих условий:
+    \begin{itemize}
+        \item не иметь пользовательских конструкторов, 
+            деструктора или копирующего оператора присваивания;
+        \item не иметь базовых классов;
+        \item не иметь виртуальных функций;
+        \item не иметь защищенных (protected) или закрытых (private) нестатических членов данных;
+        \item не иметь нестатических членов данных не-POD-типов (или массивов из таких типов), а также ссылок.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Structure binding}
+    \begin{itemize}
+        \item Определим простейшую POD структуру:
+            \begin{lstlisting}
+struct Point {
+    int x;
+    int y;
+};
+            \end{lstlisting}
+        \item Structure binding:
+            \begin{lstlisting}
+Point p = { 1, 2 };
+auto [x, y] = p; // C++17
+
+foo(x); // equal to foo(p.x);
+bar(y); // equal to bar(p.y);
+            \end{lstlisting}
+        \end{itemsize}
+\end{frame}
+
+\begin{frame}[fragile]{Structure binding}
+    Такие конструкции удобно использовать вместе с алгоритмами из стандартной библиотеки, 
+        которые часто возвращают \code{std::pair} в качестве результата своей работы.
+    \begin{lstlisting}
+std::unordered_map<std::string, std::string> map;
+
+auto [it, inserted] = map.emplace("key", "value");
+
+if (inserted) {
+    // do something with it
+}
+else {
+    // do something else with it
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Методы}
+    Метод — это функция, определённая внутри структуры.
+\small
+    \begin{lstlisting}
+struct Segment {
+    Point p1;
+    Point p2;
+    double length() {
+        double dx = p1.x - p2.x;
+        double dy = p1.y - p2.y;
+        return sqrt(dx * dx + dy * dy);
+    }
+};
+int main() {
+    Segment s = { { 0.4, 1.4 }, { 1.2, 6.3 } };
+    cout << s.length() << endl;
+    return 0;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Методы}
+    Методы реализованы как функции с неявным параметром \code{this},
+    который указывает на текущий экземпляр структуры.
+    \small
+    \begin{lstlisting}
+struct Point 
+{
+    double x;
+    double y;
+
+    void shift(/* Point * this, */
+               double x, double y) {
+        this->x += x;
+        this->y += y;        
+    }
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Методы: объявление и определение}
+    Методы можно разделять на объявление и определение:
+    \begin{lstlisting}
+struct Point 
+{
+    double x;
+    double y;
+
+    void shift(double x, double y);
+};
+    \end{lstlisting}
+
+    \begin{lstlisting}
+void Point::shift(double x, double y) 
+{
+    this->x += x;
+    this->y += y;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Конструкторы}
+    Конструкторы — это методы для инициализации структур.
+    \begin{lstlisting}
+struct Point {
+    Point() { 
+        x = y = 0;
+    }
+    Point(double x, double y) {
+        this->x = x;
+        this->y = y;
+    }
+    double x;
+    double y;
+};
+    \end{lstlisting}
+    \begin{lstlisting}
+Point p1;
+Point p2(3,7);
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Список инициализации}
+    Список инициализации позволяет проинициализировать поля до входа в
+    конструктор.
+    \begin{lstlisting}
+struct Point {
+    Point() : x(0), y(0) 
+    {}
+    Point(double x, double y) : x(x), y(y) 
+    {}
+
+    double x;
+    double y;
+};
+    \end{lstlisting}
+Инициализации полей в списке инициализации
+происходит в {\em порядке объявления полей} в структуре.
+\end{frame}
+
+\begin{frame}[fragile]{Значения по умолчанию}
+    \begin{itemize}
+        \item Функции могут иметь значения параметров {\em по умолчанию}.
+        \item Значения параметров по умолчанию нужно указывать в {\em объявлении
+            функции}.
+            \begin{lstlisting}
+struct Point {
+    Point(double x = 0, double y = 0) 
+        : x(x), y(y)
+    {}
+    double x;
+    double y;
+};
+            \end{lstlisting}
+            \begin{lstlisting}
+Point p1;
+Point p2(2);
+Point p3(3,4);
+            \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Значения по умолчанию}
+    \begin{itemize}
+        \item Определим структуру:
+            \begin{lstlisting}
+struct Point {
+    int x;
+    int y;
+};
+            \end{lstlisting}
+        \item Попробуем инициализировать ее значения:
+            \begin{lstlisting}
+Point p1 = { 1, 2 }; // ok
+Point p2; // undefined
+            \end{lstlisting}
+        \end{itemsize}
+\end{frame}
+
+\begin{frame}[fragile]{Значения по умолчанию}
+    \begin{itemize}
+        \item Исправим нашу структуру:
+            \begin{lstlisting}
+struct Point {
+    int x = 0;
+    int y = 0;
+};
+            \end{lstlisting}
+        \item Попробуем инициализировать ее значения:
+            \begin{lstlisting}
+Point p1 = { 1, 2 }; // ok
+Point p2; // now ok
+            \end{lstlisting}
+        \end{itemsize}
+\end{frame}
+
+\begin{frame}[fragile]{Конструкторы от одного параметра}
+    Конструкторы от одного параметра задают {\em неявное}
+    пользовательское преобразование:
+\begin{lstlisting}
+struct Segment {
+    Segment() {}
+    Segment(double length) 
+        : p2(length, 0)
+    {}
+    Point p1;
+    Point p2;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    Segment s1;
+    Segment s2(10);
+    Segment s3 = 20;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Конструкторы от одного параметра}
+    Для того, чтобы запретить {\em неявное} пользовательское
+преобразование, используется ключевое слово \code{explicit}.
+\begin{lstlisting}
+struct Segment {
+    Segment() {}
+    explicit Segment(double length) 
+        : p2(length, 0)
+    {}
+    Point p1;
+    Point p2;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    Segment s1;
+    Segment s2(10);
+    Segment s3 = 20; // error
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Конструкторы от одного параметра}
+Неявное пользовательское преобразование, 
+задаётся также конструкторами, которые могут принимать один параметр.
+\begin{lstlisting}
+struct Point {
+    explicit Point(double x = 0, double y = 0) 
+        : x(x), y(y)
+    {}
+    double x;
+    double y;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    Point p1;
+    Point p2(2);
+    Point p3(3,4);
+    Point p4 = 5; // error
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Конструктор по умолчанию}
+    Если у структуры нет конструкторов, то конструктор 
+    без параметров, {\em конструктор по умолчанию},
+    генерируется компилятором.
+\begin{lstlisting}
+struct Segment {
+    Segment(Point p1, Point p2) 
+        : p1(p1), p2(p2)
+    {}
+    Point p1;
+    Point p2;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    Segment s1; // error
+    Segment s2(Point(), Point(2,1));
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Конструктор по умолчанию}
+    Существует возможность добавить {\em конструктор по умолчанию}.
+    В таком случае компилятор сгенерирует конструктор самостоятельно.
+\begin{lstlisting}
+struct Segment {
+    Segment() = default; // C++11
+    Segment(Point p1, Point p2) 
+        : p1(p1), p2(p2)
+    {}
+
+    Point p1;
+    Point p2;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    // ok if Point type has default constructor
+    Segment s1;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Удаление конструктора}
+    Существует возможность удалить {\em конструктор по умолчанию}.
+\begin{lstlisting}
+struct Segment {
+    Segment() = delete;
+
+    Point p1;
+    Point p2;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    Segment s1; // error
+    Segment s2(Point(), Point(2,1)); // error
+    Segment s2{ Point(), Point(2,1) }; // ok until C++20
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Особенности синтаксиса \langcpp}
+
+    {\em ``Если что-то похоже на объявление функции, то это
+    и есть объявление функции.''}
+\begin{lstlisting}
+struct Point {
+    explicit Point(double x = 0, double y = 0) 
+        : x(x), y(y) {}
+    double x;
+    double y;
+};
+\end{lstlisting}
+\begin{lstlisting}
+    Point p1;   // определение переменной
+    Point p2(); // объявление функции
+
+    double k = 5.1;
+    Point p3(int(k)); // объявление функции
+    Point p4((int)k); // определение переменной
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Деструктор}
+    Деструктор — это метод, который вызывается при удалении структуры,
+    генерируется компилятором.
+\begin{lstlisting}
+struct Point {
+    Point() {
+        std::cout << "A" << std::endl;
+    }
+
+    ~Point() {
+        std::cout << "B" << std::endl;
+    }
+};
+
+void foo() { Point p; }
+
+foo(); // prints AB
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Время жизни}{}
+    {\em Время жизни}~--- это временной интервал 
+    между вызовами конструктора и деструктора.
+\begin{lstlisting}
+void foo() {
+    Point p1; // создание p1
+    Point p2; // создание p2
+
+    {
+        Point p3; // создание p3
+    } // удаление p3
+} // удаление p2, потом p1
+\end{lstlisting}
+Деструкторы переменных на стеке вызываются в обратном
+порядке (по отношению к порядку вызова конструкторов).
+\end{frame}
+
+\begin{frame}[fragile]{Объекты и классы}
+    \small
+    \begin{itemize}
+        \item Структуру с методами, конструкторами и деструктором
+            называют {\em классом}.
+        \item Экземпляр (значение) класса называется {\em объектом}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Модификаторы доступа}{}
+    Модификаторы доступа позволяют ограничивать 
+    доступ к методам и полям класса.
+\begin{lstlisting}
+struct Point {
+    explicit Point(double x = 0, double y = 0) 
+        : x(x), y(y) {}
+
+    int x() { return x; }
+    void set_x(int x_new) { x = x_new; }
+
+    // y methods here
+private:
+    double x;
+    double y;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Ключевое слово \code{class}}{}
+    Ключевое слово \code{struct} можно заменить на 
+    \code{class}, тогда поля и методы
+    по умолчанию будут private.
+
+\begin{lstlisting}
+class Point {
+    double x;
+    double y;
+
+public:
+    explicit Point(double x = 0, double y = 0) 
+        : x(x), y(y) {}
+
+    int x() { return x; }
+    void set_x(int x_new) { x = x_new; }
+
+    // y methods here
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Ключевое слово \code{class}}{}
+\begin{lstlisting}
+class Point {
+public:
+    explicit Point(double x = 0, double y = 0) 
+        : x_(x), y_(y) {}
+
+    int x() { return x_; }
+    void set_x(int x_new) { x_ = x_new; }
+
+    // y methods here
+
+private:
+    double x_;
+    double y_;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Инварианты класса}{}
+    \begin{itemize}
+        \item Выделение {\em публичного интерфейса} позволяет
+            поддерживать {\em инварианты класса}\\
+            (сохранять
+            данные объекта в согласованном состоянии).
+\begin{lstlisting}
+struct IntArray {
+    ...
+    size_t size_;
+    int * data_; // массив размера size\_
+};
+\end{lstlisting}
+        
+        \item Для сохранения инвариантов класса:
+            \begin{enumerate}
+                \item все поля должны быть закрытыми, 
+                \item публичные методы должны сохранять инварианты класса.
+            \end{enumerate}
+
+        \item Закрытие полей класса позволяет абстрагироваться 
+            от способа хранения данных объекта.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Публичный интерфейс}{}
+\begin{lstlisting}
+struct IntArray {
+    ...
+    void resize(size_t nsize) {
+        int * ndata = new int[nsize];
+        size_t n = nsize > size_ ? size_ : nsize;
+        for (size_t i = 0; i != n; ++i)
+            ndata[i] = data_[i];
+        delete[] data_;
+        data_ = ndata;
+        size_ = nsize;
+    }
+private:
+    size_t size_;
+    int * data_;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Абстракция}{}
+\begin{lstlisting}
+struct IntArray {
+public:
+    explicit IntArray(size_t size) 
+        : size_(size), data_(new int[size]) 
+    {}
+    ~IntArray() { delete[] data_;  }
+
+    int & get(size_t i) { return data_[i]; }
+    size_t size() { return size_; }
+
+private:
+    size_t size_;
+    int * data_;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Абстракция}{}
+\begin{lstlisting}
+struct IntArray {
+public:
+    explicit IntArray(size_t size) 
+        : data_(new int[size + 1]) 
+    {
+        data_[0] = size;
+    }
+    ~IntArray() { delete[] data_;  }
+
+    int & get(size_t i) { return data_[i + 1]; }
+    size_t size() { return data_[0]; }
+
+private:
+    int * data_;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Константные методы}{}
+    \begin{itemize}
+        \item Методы могут быть объявлены как \code{const}.
+\begin{lstlisting}
+struct S
+{
+    const int & ref() const {
+        return data_;
+    }
+private:
+    int data_;
+};
+\end{lstlisting}
+        \item Такие методы не могут менять поля объекта.
+        \item У константных объектов (через указатель или ссылку на константу)
+            можно вызывать только константные методы.
+        \item Внутри константных методов можно вызывать только константные методы.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Две версии одного метода}{}
+    \begin{itemize}
+        \item Слово \code{const} является частью сигнатуры метода.
+        \begin{lstlisting}
+const int & S::ref() const { return data_; }
+        \end{lstlisting}
+        \item Можно определить две версии одного метода:
+        \begin{lstlisting}
+struct S
+{
+    const int & ref() const {
+        return data_;
+    }
+    int & ref() {
+        return data_;
+    }
+private:
+    int data_;
+};
+        \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Cинтаксическая и логическая константность}{}
+    \begin{itemize}
+    \item Синтаксическая константность~--- константные методы
+        не могут менять поля (обеспечивается компилятором).
+    \item Логическая константность~--- нельзя менять те данные, 
+        которые определяют состояние объекта.
+        \begin{lstlisting}
+struct S 
+{
+    void foo() const {
+        data_ = 10; // error
+    }
+private:
+    int data_;
+};
+        \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ключевое слово \code{mutable}}{}
+    Ключевое слово \code{mutable} позволяет определять поля,
+    которые можно изменять внутри константных методов:
+    \begin{lstlisting}
+struct S 
+{
+    void foo() const {
+        data_ = 10; // now ok
+    }
+private:
+    mutable int data_;
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Копирование и перемещение объектов}{}
+    Язык \langcpp позволяет определить поведение при копировании и перемещении объектов.
+    \begin{lstlisting}
+struct S 
+{
+    S() = default;
+    // Копирующий конструктор.
+    S(const S &) = default;
+    // Перемещающий конструктор.
+    S(S &&) = default;
+
+    // Оператор копирующего присваивания.
+    S & operator=(const S &) = default;
+    // Оператор перемещающего присваивания.
+    S & operator=(S &&) = default;
+private:
+    int data_;
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Копирование объектов}{}
+    Определим конструктор и оператор копирования:
+    \begin{lstlisting}
+struct S 
+{
+    S() = default;
+    S(const std::vector<int> & new_data)
+        : data_(new_data)
+    {}
+    S & operator=(const std::vector<int> & new_data) {
+        data_ = new_data;
+        return *this;
+    }
+private:
+    std::vector<int> data_ = decltype(data_)(100500);
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Копирование объектов}{}
+    \begin{lstlisting}    
+int main() {
+    S s1;
+    S s2(s1); // copy
+    S s3 = s1; // copy
+    s2 = s1; // operator=
+}
+    \end{lstlisting}
+\end{frame}
+    
+\begin{frame}[fragile]{Копирование объектов}{}
+    \begin{itemize}
+        \item Если не определить конструктор копирования,
+            то он сгенерируется компилятором.
+        \item Если не определить оператор присваивания,
+            то он тоже сгенерируется компилятором.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Перемещение объектов}{}
+    Определим конструктор и оператор перемещения:
+    \begin{lstlisting}
+struct S 
+{
+    S() = default;
+    S(std::vector<int> && new_data)
+        : data_(std::move(new_data))
+    {}
+    S & operator=(std::vector<int> && new_data) {
+        data_ = std::move(new_data);
+        return *this;
+    }
+private:
+    std::vector<int> data_ = decltype(data_)(100500);
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Перемещение объектов}{}
+    \begin{lstlisting}    
+int main() {
+    S s1;
+    S s2(std::move(s1)); // move
+    S s3 = std::move(s2); // move
+
+    S s4;
+    s4 = std::move(s3); // move operator=
+    
+    foo(s1); // undefined use-after-move
+}
+    \end{lstlisting}
+\end{frame}
+    
+\begin{frame}[fragile]{Перемещение объектов}{}
+    \begin{itemize}
+        \item Если не определить конструктор перемещения,
+            то он сгенерируется компилятором.
+        \item Если не определить оператор перемещения,
+            то он тоже сгенерируется компилятором.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Правило 3/5/0}{}
+    \begin{itemize}
+        \item Правило 3. Если определен пользовательский деструктор, копирующий конструктор или копирующий \code{operator=},
+            то следует определять все 3 сразу.
+        \item Правило 5. Если определен пользовательский деструктор, копирующий конструктор или копирующий \code{operator=},  
+            то их определение не позволяет компилятору сгенерировать методы для перемещения.
+            Следует определять все 5 методов сразу.
+        \item Правило 0. Если можно обойтись без пользовательских методов копирования/перемещения/деструкторов, то не следует их определять.
+            Следуйте SRP - single responsibility principle.
+    \end{itemize}
+    Замечание: подробнее можно прочитать на cppreference или в cpp core guidelines.
+\end{frame}
+
+\end{document}
