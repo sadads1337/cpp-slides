@@ -1,0 +1,826 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 4. Ручное управление памятью}
+
+\date{
+   \textbf{CS центр}\\
+   28 сентября 2021 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Еще раз про указатели}
+    \begin{itemize}
+        \item Указатель — это переменная, хранящая адрес некоторой 
+            ячейки памяти.
+        \item Указатели являются типизированными.
+\begin{lstlisting}
+int i = 3; // переменная типа int
+int * p = 0; // указатель на переменную типа int
+\end{lstlisting}
+        \item Нулевому указателю (\code{nullptr}) не~соответствует никакая ячейка памяти.
+        \item Оператор взятия адреса переменной \code{\&}.
+        \item Оператор разыменования \code{*}.
+
+\begin{lstlisting}
+p = &i; // указатель p указывает на переменную i
+*p = 10; // изменяется ячейка по адресу p, т.е. i
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Указатели и const}
+    \begin{itemize}
+        \item Константный указатель~--- это переменная, хранящая адрес некоторой 
+            ячейки памяти, который нельзя изменить.
+        \item Указатель на константу~--- это переменная, хранящая адрес некоторой 
+            ячейки памяти. Данные в этой ячейки нельзя изменить.
+        \item Модификатор~--- часть типа.
+\begin{lstlisting}
+int i = 3;
+int * const p1 = &i; // константный указатель
+int const * p2 = &i; // указатель на константу
+const int * p3 = &i; // указатель на константу
+
+p1 = nullptr; // error
+*p1 = 10; // ok
+p2 = nullptr; // ok
+*p2 = 10; // error
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Связь массивов и указателей}
+    \begin{itemize}
+        \item Указатели позволяют передвигаться по массивам.
+        \item Для этого используется арифметика указателей:
+\begin{lstlisting}
+int m[10] = {1, 2, 3, 4, 5}; 
+int * p = &m[0]; // адрес начала массива
+int * q = &m[9]; // адрес последнего элемента
+\end{lstlisting}
+            \begin{itemize}
+                \item {\tt (p + k)} — сдвиг на {\tt k} ячеек типа \code{int} вправо.
+                \item {\tt (p - k)} — сдвиг на {\tt k} ячеек типа \code{int} влево.
+                \item {\tt (q - p)} — количество ячеек между
+                    указателями.
+                \item {\tt p[k]} эквивалентно {\tt *(p + k)}.
+            \end{itemize}
+    \end{itemize}
+\begin{center}
+\begin{tikzpicture}[
+      start chain=1 going right,node distance=-0.15mm
+    ]
+    \tikzstyle{cell} = [rectangle,minimum width=5mm, minimum height=5mm,draw,on chain=1];
+    \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+
+    \foreach \i in {1,2}
+        \node[cell,dashed] {};
+        
+    \node[cell,dashed] (b) {};
+
+    \foreach \i in {1,2,3,4,5}
+        \node[cell,thick] (m\i) {\i};
+        
+    \foreach \i in {0,0,0}
+        \node[cell,thick] {\i};
+
+    \node[cell,thick] (e) {0};
+    \node[cell,thick] {0};
+
+    \node[below of=b,yshift=-10mm] (p) {{\tt p}};
+    \path [arrow,->] (p) edge node {} (b.south east);
+
+    \node[below of=e,yshift=-10mm] (q) {{\tt q}};
+    \path [arrow,->] (q) edge node {} (e.south east);
+
+    \node[below of=m2,yshift=-10mm] (p2) {{\tt (p + 2)}};
+    \path [arrow,->] (p2) edge node {} (m2.south east);
+
+    \node[below of=m5,yshift=-10mm] (q4) {{\tt (q - 4)}};
+    \path [arrow,->] (q4) edge node {} (m5.south east);
+
+    \foreach \i in {1,2,3}
+        \node[cell,dashed] {};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Примеры}
+Заполнение массива:
+\begin{lstlisting}
+int m[10] = {}; // изначально заполнен нулями
+
+for (int * p = m ; p <= m + 9; ++p) {
+    *p = (p - m) + 1;
+} // Массив заполнен числами от 1 до 10
+\end{lstlisting}
+Передача массива в функцию:
+\begin{lstlisting} 
+int max_element(int * m, int size) {
+    int max = *m; 
+    for (int i = 1; i < size; ++i) {
+        if (m[i] > max) { max = m[i]; }
+    }
+    return max;
+}
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{Два способа передачи массива}
+\small
+\begin{lstlisting}
+bool contains(int * m, int size, int value) {
+    for (int i = 0; i != size; ++i) {
+        if (m[i] == value) { return true; }
+    }
+    return false;
+}
+bool contains(int * p, int * q, int value) {
+    for (; p != q; ++p) {
+        if (*p == value) { return true; }
+    }
+    return false;
+}
+\end{lstlisting}
+\begin{center}
+\begin{tikzpicture}[
+      start chain=1 going right,node distance=-0.15mm
+    ]
+    \tikzstyle{cell} = [rectangle,minimum width=5mm, minimum height=5mm,draw,on chain=1];
+    \tikzstyle{arrow} = [>=stealth',shorten >=2pt, shorten <=2pt]
+
+    \foreach \i in {1,2}
+        \node[cell,dashed] {};
+        
+    \node[cell,dashed] (b) {};
+
+    \foreach \i in {1,2,3,4,5}
+        \node[cell,thick] (m\i) {\i};
+        
+    \foreach \i in {0,0,0}
+        \node[cell,thick] {\i};
+
+    \node[cell,thick] {0};
+    \node[cell,thick] (e) {0};
+
+    \node[below of=b,yshift=-10mm] (p) {{\tt p}};
+    \path [arrow,->] (p) edge node {} (b.south east);
+
+    \node[below of=e,yshift=-10mm] (q) {{\tt q}};
+    \path [arrow,->] (q) edge node {} (e.south east);
+
+    \node[cell,dashed,color=red] {};
+
+    \foreach \i in {2,3}
+        \node[cell,dashed] {};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Возрат указателя из функции}
+Функция для поиска максимума в массиве:
+\begin{lstlisting}
+int * max_element(int * p, int * q) {
+    int * pmax = p;
+    for (; p != q; ++p) {
+        if (*p > *pmax) { pmax = p; }
+    }
+    return pmax;
+}
+\end{lstlisting}
+\begin{lstlisting}
+    int m[10] = {...};
+    int * pmax = max_element(m, m + 10); 
+    cout << "Maximum = " << *pmax << endl; 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Возрат значения через указатель}
+Функция для поиска максимума в массиве:
+\begin{lstlisting}
+bool max_element(int * p, int * q, int * res) {
+    if (p == q) { return false; }
+    *res = *p;
+    for (; p != q; ++p) {
+        if (*p > *res) { *res = *p; }
+    }
+    return true;
+}
+\end{lstlisting}
+\begin{lstlisting}
+    int m[10] = {...};
+    int max = 0;
+    if (max_element(m, m + 10, &max)) {
+        cout << "Maximum = " << max << endl;
+    }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Возрат значения через указатель на указатель}
+Функция для поиска максимума в массиве:
+\begin{lstlisting}
+bool max_element(int * p, int * q, int ** res) {
+    if (p == q)
+        return false;
+    *res = p;
+    for (; p != q; ++p)
+        if (*p > **res)
+            *res = p;
+    return true;
+}
+\end{lstlisting}
+\begin{lstlisting}
+    int m[10] = {...};
+    int * pmax = 0;
+    if (max_element(m, m + 10, &pmax)) 
+        cout << "Maximum = " << *pmax << endl; 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Недостатки указателей}
+    \begin{itemize}
+        \item Использование указателей синтаксически загрязняет код
+            и усложняет его понимание.
+            (Приходится использовать операторы \code{*} и \code{\&}.)
+        \item Указатели могут быть неинициализированными (некорректный код).
+        \item Указатель может быть нулевым (корректный код), 
+            а значит указатель нужно проверять на равенство нулю.
+        \item Арифметика указателей может сделать из корректного указателя
+            некорректный (легко промахнуться).
+        \item Тяжелее отследить время жизни указателей.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Еще раз про различия ссылок и указателей}
+    \begin{itemize}
+        \item Ссылка не может быть неинициализированной.
+\begin{lstlisting}
+int * p; // OK
+int & l; // ошибка
+\end{lstlisting}
+        \item У ссылки нет нулевого значения.            
+\begin{lstlisting}
+int * p = 0; // OK
+int & l = 0; // ошибка
+\end{lstlisting}
+    \item Ссылку нельзя переприсвоить:
+\begin{lstlisting}
+int a = 10, b = 20;
+int * p = &a; // p указывает на a
+p = &b;       // p указывает на b
+int & l = a;  // l ссылается на a
+l = b;        // a присваивается значение b
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Еще раз про различия ссылок и указателей}
+    \begin{itemize}
+        \item Нельзя получить адрес ссылки или ссылку на ссылку.
+\begin{lstlisting}
+int a = 10;
+int * p = &a;  // p указывает на a
+int ** pp = &p;// pp указывает на переменную p
+int & l = a;   // l ссылается на a
+int * pl = &l; // pl указывает на переменную a
+int && ll = l; // ошибка
+\end{lstlisting}
+        \item Нельзя создавать массивы ссылок.
+\begin{lstlisting}
+int * mp[10] = {};  // массив указателей на int
+int & ml[10] = {};  // ошибка
+\end{lstlisting}
+        \item Для ссылок нет арифметики.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ссылки и rvalue}
+    Cсылки могут указывать только на lvalue.
+    \begin{lstlisting}
+int a = 10, b = 20;
+int m[10] = {1,2,3,4,5,5,4,3,2,1};
+int & l1 = a;       // OK
+int & l2 = a + b;   // ошибка
+int & l3 = *(m + a / 2);        // OK
+int & l4 = *(m + a / 2) + 1;    // ошибка
+int & l5 = (a + b > 10) ? a : b;  // OK
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Зачем нужна динамическая память?}
+    \begin{itemize}
+        \item Стек программы ограничен. Он не предназначен
+            для хранения больших объемов данных.
+\begin{lstlisting}
+// Не умещается на стек
+double m[10000000] = {}; // 80 Mb
+\end{lstlisting}
+        \item Время жизни локальных переменных ограничено
+            временем работы функции.
+        \item Динамическая память выделяется в сегменте данных.
+        \item Структура, отвечающая за выделение дополнительной
+            памяти, называется {\bf кучей} (не нужно путать
+            с одноимённой структурой данных).
+        \item Выделение и освобождение памяти {\em управляется вручную}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Выделение памяти в стиле \langc}
+    \begin{itemize}
+        \item Стандартная библиотека \code{cstdlib}
+            предоставляет четыре функции для управления памятью:
+            {\small
+            \begin{lstlisting}
+void * malloc(size_t size);
+void * calloc(size_t nmemb, size_t size);
+void * realloc(void * ptr, size_t size);
+void free(void * ptr);
+            \end{lstlisting}}
+        \item \code{size\_t}~--- специальный целочисленный беззнаковый тип, 
+            может вместить в себя размер любого типа в байтах.
+        \item Тип \code{size\_t} используется для указания размеров типов данных,
+            для индексации массивов и пр.
+        \item \code{void *}~--- это указатель на нетипизированную память\\
+            (раньше для этого использовалось \code{char *}).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Выделение памяти в стиле \langc}
+    \begin{itemize}
+        \item Функции для управления памятью в стиле \langc:
+            {\small
+\begin{lstlisting}
+void * malloc(size_t size);
+void * calloc(size_t nmemb, size_t size);
+void * realloc(void * ptr, size_t size);
+void free(void * ptr);               
+\end{lstlisting}
+}
+        \item \code{malloc}~--- выделяет область памяти размера $\ge$
+            \code{size}. Данные не инициализируются.
+        \item \code{calloc}~--- выделяет массив из \code{nmemb} элементов  размера 
+            \code{size}. Данные инициализируются нулём.
+        \item \code{realloc}~--- изменяет размер области памяти по указателю
+            \code{ptr} на \code{size} (если возможно, то это делается на месте).
+        \item \code{free}~--- освобождает область памяти, ранее выделенную
+            одной из функций \code{malloc}/\code{calloc}/\code{realloc}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Выделение памяти в стиле \langc}
+    \begin{itemize}
+        \item Для указания размера типа используется оператор \code{sizeof}.
+\begin{lstlisting}
+// создание массива из 1000 int    
+int * m = (int *)malloc(1000 * sizeof(int));
+m[10] = 10;
+
+// изменение размера массива до 2000
+m = (int *)realloc(m, 2000 * sizeof(int));
+
+// освобождение массива
+free(m);
+
+// создание массива нулей
+m = (int *)calloc(3000, sizeof(int));
+free(m);
+m = 0;
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Выделение памяти в стиле \langcpp}
+    \begin{itemize}
+        \item Язык \langcpp предоставляет два набора операторов для
+            выделения памяти:
+            \begin{enumerate}
+                \item \code{new} и \code{delete}~--- для одиночных значений,
+
+                \item \code{new []} и \code{delete []}~--- для массивов.
+            \end{enumerate}
+
+        \item Версия оператора \code{delete} должна соответствовать
+            версии оператора \code{new}.
+\begin{lstlisting}
+// выделение памяти под один int со значением 5
+int * m = new int(5);
+delete m; // освобождение памяти
+
+// создание массива нулей
+m = new int[1000](); // () означает обнуление 
+delete [] m; // освобождение памяти
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Типичные проблемы при работе с памятью}
+    \begin{itemize}
+        \item Проблемы производительности: создание переменной на стеке
+            намного ``дешевле'' выделения для неё динамической памяти.
+
+        \item Проблема фрагментации: выделение большого количества
+            небольших сегментов способствует фрагментации памяти.
+        
+        \item Утечки памяти:
+\begin{lstlisting}
+// создание массива из 1000 int    
+int * m = new int[1000];
+
+// создание массива из 2000 int    
+m = new int[2000]; // утечка памяти
+
+// Не вызван delete [] m, утечка памяти
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Типичные проблемы при работе с памятью}
+    \begin{itemize}
+    \item Неправильное освобождение памяти.
+\begin{lstlisting}
+int * m1 = new int[1000];
+delete m1; // должно быть delete [] m1
+
+int * p = new int(0);
+free(p); // совмещение функций C++ и C
+
+int * q1 = (int *)malloc(sizeof(int));
+free(q1);
+free(q1); // двойное удаление
+
+int * q2 = (int *)malloc(sizeof(int));
+free(q2);
+q2 = 0;   // обнуляем указатель
+free(q2); // правильно работает для q2 = 0
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Многомерные встроенные массивы}
+    \begin{itemize}
+        \item \langcpp позволяет определять многомерные массивы:
+        \begin{lstlisting}
+int m2d[2][3] = { {1, 2, 3}, {4, 5, 6} };
+for( size_t i = 0; i != 2; ++i ) {
+    for( size_t j = 0; j != 3; ++j ) {
+        cout << m2d[i][j] << ' ';
+    }
+    cout << endl;
+}
+        \end{lstlisting}
+    \item Элементы {\tt m2d} располагаются в памяти ``по строчкам''.
+    \item Размерность массивов может быть любой, но на практике
+        редко используют массивы размерности $> 4$.
+\begin{lstlisting}
+int m4d[2][3][4][5] = {};
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Динамические массивы}
+    \begin{itemize}
+        \item Для выделения одномерных динамических массивов
+            обычно используется оператор \code{new []}.
+\begin{lstlisting}
+int * m1d = new int[100];
+\end{lstlisting}
+        \item Какой тип должен быть у указателя на двумерный динамический
+            массив?
+            \begin{itemize}
+                \item Пусть {\tt m}~--- указатель на двумерный массив типа \code{int}.
+
+                \item Значит {\tt m[i][j]} имеет тип \code{int} (точнее
+                    \code{int \&}).
+
+                \item {\tt m[i][j] $\Leftrightarrow$ *(m[i] + j)},
+                    т.е. тип {\tt m[i]}~--- \code{int *}.
+
+                \item аналогично, {\tt m[i] $\Leftrightarrow$ *(m + i)},
+                    т.е. тип {\tt m}~--- \code{int **}.
+            \end{itemize}
+            \item Чему соответствует значение {\tt m[i]}?\\ 
+                Это адрес строки с номером {\tt i}.
+
+            \item Чему соответствует значение {\tt m}?\\
+                Это адрес массива с указателями на строки.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Двумерные массивы}
+    Давайте рассмотрим создание массива $5\times 4$.
+    
+\begin{center}
+\begin{tikzpicture}[                                                          
+      start chain=1 going right, node distance=-0.15mm,
+      start chain=2 going right
+    ]
+    \tikzstyle{cell} = [rectangle,minimum width=4mm, minimum height=4mm,draw];
+    \tikzstyle{arrow} = [>=stealth']
+
+    \begin{scope}[shift={(4cm,35mm)}]
+    \foreach \i in {1,2,3,4} {
+        \node[cell,on chain=2] (m\i-1) {};   
+            \foreach \j/\k in {{2/1},{3/2},{4/3},{5/4}}
+                \node[cell,below of=m\i-\k,yshift=-7mm] (m\i-\j) {};
+    };
+   
+    \node[on chain=2] (t0) {{\tt m[0]}};   
+    \foreach \i/\k in {{1/0},{2/1},{3/2},{4/3}}
+        \node[below of=t\k,yshift=-7mm] (t\i) {{\tt m[\i]}};
+    \end{scope}
+
+    \node[on chain=1] (m) {{\tt m}};
+    \foreach \i in {1,2,3,4,5} {
+        \node[cell,on chain=1] (m\i) {};
+        \path [arrow,->] (m\i.center) edge node {} (m1-\i.west);     
+    };
+\end{tikzpicture}
+        \begin{lstlisting}
+int ** m = new int * [5];
+for (size_t i = 0; i != 5; ++i)
+    m[i] = new int[4];
+        \end{lstlisting}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Двумерные массивы}
+    Выделение и освобождение двумерного массива размера $a\times b$.
+        \begin{lstlisting}
+int ** create_array2d(size_t a, size_t b) {
+    int ** m = new int *[a];
+    for (size_t i = 0; i != a; ++i)
+        m[i] = new int[b];
+    return m;
+}
+
+void free_array2d(int ** m, size_t a, size_t b) {
+    for (size_t i = 0; i != a; ++i)
+        delete [] m[i];
+    delete [] m;
+}
+        \end{lstlisting}
+При создании массива оператор \code{new} вызывается $(a + 1)$ раз.
+\end{frame}
+
+\begin{frame}[fragile]{Двумерные массивы: эффективная схема}
+    Рассмотрим эффективное создание массива $5\times 4$.
+    
+\begin{center}
+\begin{tikzpicture}[                                                          
+      start chain=1 going right, node distance=-0.15mm,
+      start chain=2 going right
+    ]
+    \tikzstyle{cell} = [rectangle,minimum width=4mm, minimum height=4mm,draw];
+    \tikzstyle{arrow} = [>=stealth']
+    \tikzstyle{mbrace} = [decorate,decoration={brace,amplitude=5pt}];
+
+    \begin{scope}[shift={(0cm,25mm)}]
+    \foreach \i in {0,1,2,3,4} {
+        \node[cell,on chain=2] (m\i-1) {};
+        \node[above of=m\i-1, shift={(6mm,7mm)}] (t\i) {{\tt\small m[\i]}};
+         \foreach \j in {2,3,4}
+             \node[cell,on chain=2] (m\i-\j) {};
+        \draw[mbrace] 
+            (m\i-1.north west)--(m\i-4.north east) node[midway,anchor=west,xshift=6pt] {};
+    };
+    \end{scope}
+
+    \node[on chain=1] (m) {{\tt m}};
+    \foreach \i in {0,1,2,3,4} {
+        \node[cell,on chain=1] (m\i) {};
+        \path [arrow,->] (m\i.center) edge node {} (m\i-1.south west);     
+    };
+\end{tikzpicture}
+        \begin{lstlisting}
+int ** m = new int * [5];
+m[0] = new int[5 * 4];
+for (size_t i = 1; i != 5; ++i)
+    m[i] = m[i - 1] + 4;
+        \end{lstlisting}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Двумерные массивы: эффективная схема}
+    Эффективное выделение и освобождение двумерного массива размера $a\times b$.
+
+    \begin{lstlisting}
+int ** create_array2d(size_t a, size_t b) {
+    int ** m = new int *[a];
+    m[0] = new int[a * b];
+    for (size_t i = 1; i != a; ++i)
+        m[i] = m[i - 1] + b;
+    return m;
+}
+
+void free_array2d(int ** m, size_t a, size_t b) {
+    delete [] m[0];
+    delete [] m;
+}
+        \end{lstlisting}
+При создании массива оператор \code{new} вызывается 2 раза.
+\end{frame}
+
+\begin{frame}[fragile]{Умные указатели}
+    \begin{enumerate}
+        \item Идиома RAII (Resource Acquisition Is Initialization):
+            время жизни ресурса связанно с временем жизни объекта.
+            \begin{itemize}
+                \item Получение ресурса в конструкторе.
+                \item Освобождение ресурса в деструкторе.
+            \end{itemize}
+
+        \item Основные области использования RAII:
+            \begin{itemize}
+                \item для управления памятью,
+                \item для открытия файлов или устройств,
+                \item для критических секций при параллельном исполнении кода.
+            \end{itemize}
+        \item Умные указатели~--- объекты, инкапсулирующие владение памятью.
+            Синтаксически ведут себя так же, как и обычные указатели.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Основные стратегии}
+    \begin{enumerate}
+        \item \code{scoped\_ptr}~--- время жизни объекта ограничено временем
+            жизни умного указателя.
+        \item \code{shared\_ptr}~--- разделяемый объект, реализация с подсчётом
+            ссылок.
+        \item \code{weak\_ptr}~--- разделяемый объект, реализация с подсчётом
+            ссылок, слабая ссылка (используется вместе с \code{shared\_ptr}).
+        \item \code{unique\_ptr}~--- эксклюзивное владение
+            объектом с передачей владения при перемещении. 
+        \item \code{intrusive\_ptr}~--- разделяемый объект, реализация самим
+            внутри объекта.
+        \item \code{linked\_ptr}~--- разделяемый объект, реализация списком
+            указателей.
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{unique\_ptr}}
+    \small
+    \begin{itemize}
+        \item Определен в заголовочном файле \code{<memory>}.
+        \item Для передачи и возврата указателей из функции.
+        \item Владение эксклюзивно и передаётся при только при перемещении.
+    \end{itemize}
+        \begin{lstlisting}
+void foo(const std::unique_ptr<int> & ptr) {
+    std::cout << *ptr;
+}
+void bar(std::unique_ptr<int> && ptr) {
+    std::cout << *ptr;
+}
+void baz(std::unique_ptr<int> ptr) {
+    std::cout << *ptr;
+}
+        \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{unique\_ptr}}
+    \begin{lstlisting}
+
+int main() {
+    std::unique_ptr<int> ptr = std::make_unique<int>(10);
+
+    auto & ptr_ref = ptr; // ok
+    auto ptr_copy = ptr; // error
+
+    foo(ptr); // ok
+    bar(ptr); // error
+    bar(std::move(ptr)); // ok
+    baz(ptr); // error
+    baz(std::move(ptr)); // ok
+}
+    \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{\texttt{shared\_ptr}}
+    \small
+    \begin{itemize}
+        \item Для разделяемых объектов.
+        \item Ведётся подсчёт ссылок.
+        \item Нельзя вернуть владение объектом.
+    \end{itemize}
+        \begin{lstlisting}
+void foo(const std::shared_ptr<int> & ptr) {
+    std::cout << *ptr;
+}
+void bar(std::shared_ptr<int> && ptr) {
+    std::cout << *ptr;
+}
+void baz(std::shared_ptr<int> ptr) {
+    std::cout << *ptr;
+}
+        \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{shared\_ptr}}
+    \begin{lstlisting}
+
+int main() {
+    std::shared_ptr<int> ptr = std::make_shared<int>(10);
+
+    auto & ptr_ref = ptr; // no increment
+    auto ptr_copy = ptr; // increment
+
+    foo(ptr); // no increment
+    bar(ptr); // error
+    bar(std::move(ptr)); // no increment
+    baz(ptr) // increment
+    baz(std::move(ptr)); // no increment
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{shared\_ptr}}
+    \begin{lstlisting}
+void foo() {
+    // counter == 1
+    std::shared_ptr<int> ptr = std::make_shared<int>(10);
+
+    {
+        // counter == 2
+        auto ptr_copy = ptr;
+    } // counter == 1
+
+    {
+        // counter == 1
+        auto & ptr_ref = ptr;
+    } // counter == 1
+} // counter == 0
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{shared\_ptr}}
+    \begin{lstlisting}
+void foo() {
+    // counter == 1
+    std::shared_ptr<int> ptr = std::make_shared<int>(10);
+
+    {
+        // counter == 1
+        auto ptr_other = std::move(ptr);
+    } // counter == 0
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{weak\_ptr}}
+    \begin{itemize}
+        \item Для использования вместе с \texttt{shared\_ptr}.
+        \item Слабая ссылка для исключения циклических зависимостей.
+        \item Не владеет объектом.
+    \end{itemize}
+
+    \begin{lstlisting}
+void foo(std::weak_ptr & ptr_weak) {
+    if (auto ptr_locked = ptr_weak.lock()) {
+        // shared here
+    }
+}
+
+int main() {
+    std::shared_ptr<int> ptr = std::make_shared<int>(10);
+    foo(ptr); // implicit cast here
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Умные указатели и const}
+    \begin{itemize}
+\begin{lstlisting}
+// константный указатель
+const auto p1 = std::make_shared<int>(10);
+// указатель на константу
+auto p2 = std::make_shared<const int>(10);
+
+p1 = nullptr; // error
+*p1 = 10; // ok
+p2 = nullptr; // ok
+*p2 = 10; // error
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Заключение}
+\small
+\begin{itemize}
+    \item Умные указатели намного удобнее ручного управления памятью.
+    \item Для локальных объектов~--- \code{scoped\_ptr} (подробнее на семинаре).
+    \item Для разделяемых объектов~--- \code{shared\_ptr}.
+    \item В сильносвязанных системах рассмотрите возможность использовать \code{weak\_ptr}.    
+    \item Используйте \code{intrusive\_ptr} для тех объектов, которые
+        сами управляют своим временем жизни.
+    \item Прочитайте документацию по \code{shared\_ptr} и \code{unique\_ptr}.
+\end{itemize}
+\end{frame}
+
+\end{document}
