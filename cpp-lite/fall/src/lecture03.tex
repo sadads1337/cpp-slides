@@ -3,7 +3,7 @@
 \title{Лекция 3. Структуры данных и классы}
 
 \date{
-   \textbf{CS центр}\\
+   \textbf{ИТМО JB}\\
    21 сентября 2017 \\
    Санкт-Петербург
 }
@@ -744,11 +744,11 @@ private:
 struct S 
 {
     S() = default;
-    S(const std::vector<int> & new_data)
-        : data_(new_data)
+    S(const S & other)
+        : data_(other.data)
     {}
-    S & operator=(const std::vector<int> & new_data) {
-        data_ = new_data;
+    S & operator=(const S & other) {
+        data_ = other.data;
         return *this;
     }
 private:
@@ -783,11 +783,11 @@ int main() {
 struct S 
 {
     S() = default;
-    S(std::vector<int> && new_data)
-        : data_(std::move(new_data))
+    S(S && other)
+        : data_(std::move(other.data_))
     {}
-    S & operator=(std::vector<int> && new_data) {
-        data_ = std::move(new_data);
+    S & operator=(S && other) {
+        data_ = std::move(other.data_);
         return *this;
     }
 private:
