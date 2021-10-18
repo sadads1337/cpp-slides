@@ -1,0 +1,768 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 5. Наследование}
+
+\date{
+   \textbf{ИТМО JB}\\
+   5 октября 2021 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Наследование}
+    Наследование — это механизм, позволяющий создавать производные классы,
+    расширяя уже существующие.
+\begin{lstlisting}
+struct Person {
+    string name() const { return name_; }
+    int age() const { return age_; }
+private:
+    string name_;
+    int age_;    
+};
+
+struct Student : Person {
+    string university() const { return uni_; }
+private:
+    string uni_;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Класс-наследник}
+    У объектов класса-наследника можно вызывать публичные
+    методы родительского класса. 
+\begin{lstlisting}
+Student s;
+cout << s.name() << endl
+     << s.age()  << endl
+     << s.university() << endl;
+\end{lstlisting}
+    Внутри объекта класса-наследника хранится экземпляр родительского
+    класса.
+\begin{center}
+\begin{tikzpicture}[                                                          
+      start chain=1 going right, node distance=-0.15mm,
+    ]
+    \tikzstyle{cell} = [rectangle,minimum width=4mm, minimum height=6mm,on chain=1,draw];
+    \tikzstyle{arrow} = [>=stealth']
+    \tikzstyle{mbrace} = [decorate,decoration={brace,amplitude=5pt}];
+
+    \node[cell] (p1) {\tt name\_};
+    \node[cell] (p2) {\tt age\_};
+    \node[minimum width=1cm, on chain=1] () {};
+    \draw[mbrace] 
+       (p2.south east)--(p1.south west) node[midway,anchor=west,xshift=6pt] {};
+    \node[above of=p1, shift={(6mm,-7mm)}] () {\tt Person};
+    
+    \node[cell] (s1) {\tt name\_};
+    \node[cell] (s2) {\tt age\_};
+    \node[cell] (s3) {\tt uni\_};
+    \draw[mbrace] 
+       (s1.north west)--(s2.north east) node[midway,anchor=west,xshift=6pt] {};
+    \node[above of=s1, shift={(6mm,7mm)}] () {\tt Person};
+    \draw[mbrace] 
+       (s3.south east)--(s1.south west) node[midway,anchor=east,xshift=6pt] {};
+    \node[below of=s2, shift={(0mm,-7mm)}] () {\tt Student};
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Создание/удаление объекта класса-наследника}
+    При создании объекта производного класса сначала вызывается конструктор
+    родительского класса.
+\begin{lstlisting}
+struct Person {
+    Person(string name, int age)
+        : name_(name), age_(age)
+    {}
+};
+struct Student : Person {
+    Student(string name, int age, string uni)
+        : Person(name, age), uni_(uni)
+    {}
+};
+\end{lstlisting}
+    Деструкторы вызываются в обратном порядке.
+\end{frame}
+
+\begin{frame}[fragile]{Приведения}
+    Для производных классов определены следующие приведения:
+\begin{lstlisting}
+Student s("Alex", 21, "Oxford");
+Person & l = s;  // \verb!Student & -> Person &!
+Person * r = &s; // \verb!Student * -> Person *!
+\end{lstlisting}
+    Поэтому объекты класса-наследника могут присваиваться
+    объектам родительского класса:
+\begin{lstlisting}
+Student s("Alex", 21, "Oxford");
+Person p = s; // \verb!Person("Alex", 21);!
+\end{lstlisting}
+    При этом копируются только поля класса-родителя (срезка).\\
+    Т.е. в данном случае вызывается конструктор копирования
+    {\tt Person(Person \code{const}\& p)}, который не знает про {\tt uni\_}.
+\end{frame}
+
+\begin{frame}[fragile]{Модификатор доступа \code{protected}}
+\begin{itemize}
+    \item Класс-наследник не имеет доступа к {\tt private}-членам 
+        родительского класса.
+        
+    \item Для определения закрытых членов класса доступных наследникам
+        используется модификатор {\tt protected}.
+\begin{lstlisting}
+struct Person {
+    ...
+protected:
+    string name_;
+    int age_;    
+};
+
+struct Student : Person {
+    ... // можно менять поля name\_ и age\_
+};
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Перегрузка функций}
+    В отличие от \langc в \langcpp можно определить несколько функций
+    с одинаковым именем, но разными параметрами.
+    \begin{lstlisting}
+double square(double d) { return d * d; }
+int square(int i) { return i * i; }
+    \end{lstlisting}
+    При вызове функции по имени будет произведен поиск наиболее подходящей
+    функции:
+\begin{lstlisting}
+int     a = square(4);      // square(int)
+double  b = square(3.14);   // square(double)
+double  c = square(5);      // square(int)
+int     d = square(b);      // square(double)
+float   e = square(2.71f);  // square(double)
+\end{lstlisting}
+\end{frame}
+    
+\begin{frame}[fragile]{Перегрузка методов}
+    \begin{lstlisting}
+struct Vector2D {
+    Vector2D(double x, double y) : x(x), y(y) {}
+
+    Vector2D mult(double d) const 
+        { return Vector2D(x * d, y * d); }
+    
+    double mult(Vector2D const& p) const 
+        { return x * p.x + y * p.y;   }
+
+    double x, y;
+};
+\end{lstlisting}
+
+\begin{lstlisting}
+    Vector2D p(1, 2);
+    Vector2D q = p.mult(10); // (10, 20)
+    double  r  = p.mult(q);  // 50 
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Перегрузка при наследовании}
+    \begin{lstlisting}
+struct File {
+    void write(char const * s);
+    ...
+};
+
+struct FormattedFile : File {
+    void write(int i);
+    void write(double d);
+    using File::write;
+    ...
+};
+    \end{lstlisting}
+
+    \begin{lstlisting}
+    FormattedFile f;
+    f.write(4);
+    f.write("Hello");
+    \end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Перекрытие методов}
+    \begin{lstlisting}
+struct A {
+    void foo(int);
+};
+
+struct B : A {
+    void foo(long long);
+};
+
+int main() {
+    B b;
+    b.foo(1); // calls B::foo
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Перекрытие методов}
+    \begin{lstlisting}
+struct A {
+    void foo(int);
+};
+
+struct B : A {
+    void foo(long long);
+    using A::foo;
+};
+
+int main() {
+    B b;
+    b.foo(1); // calls A::foo
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Правила перегрузки}
+    \begin{enumerate}
+        \item Если есть точное совпадение, то используется оно.
+
+        \item Если нет функции, которая могла бы подойти с учётом преобразований,
+            выдаётся ошибка.
+
+        \item Есть функции, подходящие с учётом преобразований:
+
+            \begin{enumerate}
+                \item Расширение типов.\\
+                    \code{char, signed char, short} $\to$ \code{int}\\
+                    \code{unsigned char, unsigned short} $\to$ \code{int}/\code{unsigned int}\\
+                    \code{float} $\to$ \code{double}
+
+                \item Стандартные преобразования (числа, указатели).
+                \item Пользовательские преобразования.
+            \end{enumerate}
+            В случае нескольких параметров нужно, чтобы выбранная функция была
+            {\em строго лучше} остальных.
+    \end{enumerate}
+    {\bf NB:} перегрузка выполняется на этапе компиляции.
+\end{frame}
+
+\begin{frame}[fragile]{Перегрузка методов (overloading)}
+    \begin{lstlisting}
+struct Person {
+    string name() const { return name_; }
+    ...
+};
+struct Professor : Person {
+    string name() const { 
+        return "Prof. " + Person::name();
+    }
+    ...
+};
+    \end{lstlisting}
+
+\begin{lstlisting}
+    Professor pr("Stroustrup");
+    cout << pr.name() << endl; // Prof. Stroustrup
+    Person * p = &pr;
+    cout << p->name() << endl; // Stroustrup 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Переопределение методов (overriding)}
+    \begin{lstlisting}
+struct Person {
+    virtual string name() const { return name_; }
+    ...
+};
+struct Professor : Person {
+    string name() const override {
+        return "Prof. " + Person::name();
+    }
+    ...
+};
+    \end{lstlisting}
+
+\begin{lstlisting}
+    Professor pr("Stroustrup");
+    cout << pr.name() << endl; // Prof. Stroustrup
+    Person * p = &pr;
+    cout << p->name() << endl; // Prof. Stroustrup 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Чистые виртуальные (абстрактные) методы}
+    \begin{lstlisting}
+struct Person {
+  virtual string occupation() const = 0;
+};
+struct Student : Person {
+  string occupation() const override {return "student";}
+};
+struct Professor : Person {
+  string occupation() const override {
+      return "professor";
+  }
+};
+\end{lstlisting}
+\begin{lstlisting}
+  Person * p = next_person();
+  cout << p->occupation(); 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Виртуальный деструктор}
+К чему приведёт такой код?
+    \begin{lstlisting}
+struct Person {
+    ...
+};
+struct Student : Person {
+    ...
+private:
+    string uni_;
+};
+
+int main() {
+    Person * p = new Student("Alex",21,"Oxford");
+    ...
+    delete p;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Виртуальный деструктор}
+Правильная реализация:
+    \begin{lstlisting}
+struct Person {
+    ...
+    virtual ~Person() = default;
+};
+struct Student : Person {
+    ...
+private:
+    string uni_;
+};
+
+int main() {
+    Person * p = new Student("Alex",21,"Oxford");
+    ...
+    delete p;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Ключевые слова final и override}
+    \begin{itemize}
+        \item Ключевое слово \code{final} позволяет запретить дальнейшее наследование или переопределение методов.
+        \begin{lstlisting}
+struct A final {};
+struct B : A {}; // error
+
+struct A { virtual void foo() {}; };
+struct B : A { void foo() final {}; };
+struct C : B { void foo() {}; }; // error
+        \end{lstlisting}
+        \item Ключевое слово \code{override} позволяет провести проверки времени компиляции.
+        \begin{lstlisting}
+struct A { virtual void foo(int) {}; };
+struct B : A {
+    void foo(double) override {}; // error
+};
+                \end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Полиморфизм}
+    \begin{block}{Полиморфизм} 
+        Возможность единообразно обрабатывать разные типы данных.
+    \end{block}
+
+    \begin{block}{Перегрузка функций}
+        Выбор функции происходит в момент компиляции на основе типов аргументов
+        функции, {\em статический полиморфизм}.
+    \end{block}
+               
+    \begin{block}{Виртуальные методы}
+        Выбор метода происходит в момент выполнения на основе типа объекта, у
+        которого вызывается виртуальный метод, {\em динамический полиморфизм}. 
+    \end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Таблица виртуальных методов}
+    \begin{itemize}
+        \item Динамический полиморфизм реализуется
+            при помощи таблиц виртуальных методов.
+
+        \item Таблица заводится для каждого {\em полиморфного} класса.
+
+        \item Объекты полиморфных классов содержат
+            указатель на таблицу виртуальных методов
+            соответствующего класса.
+
+\begin{tikzpicture}[                                                          
+      start chain=1 going right, node distance=-0.15mm,
+    ]
+    \tikzstyle{cell} = [rectangle,minimum width=4mm, minimum height=6mm,on chain=1,draw];
+    \tikzstyle{arrow} = [>=stealth']
+    \tikzstyle{mbrace} = [decorate,decoration={brace,amplitude=5pt}];
+    \node[cell,color=blue!80] (p0) {\tt vptr};
+    \node[cell] (p1) {\tt name\_};
+    \node[cell] (p2) {\tt age\_};
+    \node[minimum width=1cm, on chain=1] () {};
+    \draw[mbrace] 
+       (p2.south east)--(p0.south west) node[midway,anchor=west,xshift=6pt] {};
+    \node[above of=p1, shift={(0mm,-7mm)}] () {\tt Person};
+
+    \node[cell,color=blue!80] (s0) {\tt vptr};
+    \node[cell] (s1) {\tt name\_};
+    \node[cell] (s2) {\tt age\_};
+    \node[cell] (s3) {\tt uni\_};
+    \draw[mbrace] 
+       (s0.north west)--(s2.north east) node[midway,anchor=west,xshift=6pt] {};
+    \node[above of=s1, shift={(0mm,7mm)}] () {\tt Person};
+    \draw[mbrace] 
+       (s3.south east)--(s0.south west) node[midway,anchor=east,xshift=6pt] {};
+    \node[below of=s2, shift={(-6mm,-7mm)}] () {\tt Student};
+\end{tikzpicture}
+        \item Вызов виртуального метода — это вызов метода
+            по адресу из таблицы (в коде сохраняется номер метода в таблице).
+\begin{lstlisting}
+p->occupation(); // p->vptr[1]();
+\end{lstlisting}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Таблица виртуальных методов}
+    \begin{lstlisting}
+struct Person {
+   virtual ~Person() = default;
+   string name() const {return name_;}
+   virtual string occupation() const = 0;
+   ...
+};
+struct Student : Person {
+   string  occupation() const {return "student";}
+   virtual int group() const {return group_;}
+   ...
+};
+    \end{lstlisting}
+
+\begin{minipage}{35mm}
+    {\tt Person}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        0 & \texttt{\textasciitilde{}Person}   & \texttt{0xab22} \\\hline
+        1 & \texttt{occupation} & \texttt{0x0000} \\\hline
+    \end{tabular}\vspace{4.8mm}\mbox{}
+\end{minipage}\hspace{2cm}
+\begin{minipage}{3cm}
+    {\tt Student}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        0 & \texttt{\textasciitilde{}Student} &  \texttt{0xab46} \\\hline
+        1 & \texttt{occupation} & \texttt{0xab68} \\\hline
+        2 & \texttt{group} & \texttt{0xab8a}     \\\hline
+    \end{tabular}
+\end{minipage}
+\end{frame}
+
+\begin{frame}[fragile]{Построение таблицы виртуальных методов}
+    \begin{minipage}{.55\textwidth}
+        \begin{lstlisting}[basicstyle=\fontsize{8pt}{1em}\ttfamily]
+struct Person {
+    virtual ~Person() {}
+    virtual string occupation() = 0;
+    ...
+};
+
+struct Teacher : Person {
+    string occupation() {...}
+    virtual string course() {...}
+    ...
+};
+
+struct Professor : Teacher {
+    string occupation() {...}
+    virtual string thesis() {...}
+    ...
+};
+    \end{lstlisting}
+\end{minipage}\hspace{2mm}
+\begin{minipage}{3cm}
+    {\tt Person}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        0 & \texttt{\textasciitilde{}Person}  & \texttt{0xab20} \\\hline
+        1 & \texttt{occupation}                & \texttt{0x0000} \\\hline
+    \end{tabular}
+    \vspace{1em}
+
+    {\tt Teacher}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        0 & \texttt{\textasciitilde{}Teacher} & \texttt{0xab48} \\\hline
+        1 & \texttt{occupation}                & \texttt{0xab60} \\\hline
+        2 & \texttt{course}                   & \texttt{0xab84}  \\\hline
+    \end{tabular}
+    \vspace{1em}
+
+    {\tt Professor}
+    \begin{tabular}{|l|l|l|}
+        \hline
+        0 & \texttt{\textasciitilde{}Professor} & \texttt{0xaba8} \\\hline
+        1 & \texttt{occupation}& \texttt{0xabb4} \\\hline
+        2 & \texttt{course}   & \texttt{0xab84} \\\hline
+        3 & \texttt{thesis}   & \texttt{0xabc8} \\\hline
+    \end{tabular}
+\end{minipage}
+\end{frame}
+
+\begin{frame}[fragile]{Ещё раз об ООП}
+
+    {\em Объектно-ориентированное программирование} — 
+    концпеция программирования, основанная на
+    понятиях объектов и классов.
+
+   \begin{block}{Основные принципы:}
+   \begin{itemize}
+       \item инкапсуляция,
+       \item наследование,
+       \item полиморфизм,
+       \item абстракция.
+   \end{itemize}
+   \end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Агрегирование vs наследование}
+    \begin{itemize}
+        \item {\em Агрегирование} — это включение объекта одного 
+            класса в качестве поля в другой.
+
+        \item Наследование устанавливает более сильные связи
+            между классами, нежели агрегирование:
+            \begin{itemize}
+                \item приведение между объектами,
+                \item доступ к {\tt protected} членам.
+            \end{itemize}
+
+        \item Если наследование можно заменить легко на агрегирование,
+            то это нужно сделать.
+    \end{itemize}
+\begin{block}{Примеры некорректного наследования}
+\begin{itemize}
+    \item Класс {\tt Circle} унаследовать от класса {\tt Point}.
+    \item Класс {\tt LinearSystem} унаследовать от класса {\tt Matrix}.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Принцип подстановки Барбары Лисков}
+\begin{block}{Liskov Substitution Principle (LSP)} 
+\em\centering  Функции, работающие с базовым классом, должны иметь 
+    возможность работать с подклассами не зная об этом.
+\end{block}    
+Этот принцип является важнейшим критерием при построении иерархий наследования. 
+\begin{block}{Другие формулировки}
+\begin{itemize}
+    \item Поведение наследуемых классов не должно противоречить поведению,
+            заданному базовым классом.
+    \item Более простыми словами можно сказать, что поведение наследующих классов не должно противоречить поведению, заданному базовым классом, 
+        то есть поведение наследующих классов должно быть ожидаемым для кода, использующего переменную базового типа.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Модификаторы при наследовании}
+    При наследовании можно использовать модификаторы доступа:
+\begin{lstlisting}
+    struct A {};
+    struct B1 : public A {};
+    struct B2 : private A {};
+    struct B3 : protected A {};
+\end{lstlisting}
+Для классов, объявленных как \code{struct}, по-умолчанию используется
+\code{public}, для объявленных как \code{class}~— \code{private}.
+\vspace{3mm}
+
+{\bf Важно:} {\em отношение наследования} (в терминах ООП) задаётся только \code{public}-наследованием.
+\vspace{3mm}
+
+Использование \code{private}- и \code{protected}-наследований целесообразно,
+если необходимо не только агрегировать другой класс, но и переопределить его виртуальные методы.
+\end{frame}
+
+\begin{frame}[fragile]{Переопределение \code{private} виртуальных методов}
+    \begin{lstlisting}[basicstyle=\fontsize{9pt}{1em}\ttfamily,commentstyle=\fontsize{9pt}{1em}\ttfamily\color{MOOCGreen}]
+struct NetworkDevice {
+    void send(void * data, size_t size) {
+        log("start sending");
+        send_impl(data, size);
+        log("stop sending");
+    }
+    ...
+private:
+    virtual void send_impl(void * data, size_t size) 
+    {...}
+};
+
+struct Router : NetworkDevice {
+private:
+    void send_impl(void * data, size_t size) {...}
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Реализация чистых виртуальных методов}
+    Чистые виртуальные методы могут иметь определения:
+    \begin{lstlisting}[basicstyle=\fontsize{9pt}{1em}\ttfamily,commentstyle=\fontsize{9pt}{1em}\ttfamily\color{MOOCGreen}]
+struct NetworkDevice {
+    virtual void send(void * data, size_t size) = 0;
+    ...
+};
+
+void NetworkDevice::send(void * data, size_t size) {
+    ...
+}
+
+struct Router : NetworkDevice {
+    void send(void * data, size_t size) {
+        // невиртуальный вызов
+        NetworkDevice::send(data, size);
+    }
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Интерфейсы}{}
+    {\em Интерфейс}~— это абстрактный класс, у которого отсутствуют поля,
+    а все методы являются чистыми виртуальными.
+
+    \begin{lstlisting}
+struct IConvertibleToString {
+    virtual ~IConvertibleToString() {}
+    virtual string toString() const = 0;
+};
+    \end{lstlisting}
+    \begin{lstlisting}
+struct IClonable {
+    virtual ~IClonable() {}
+    virtual IClonable * clone() const = 0;
+};
+    \end{lstlisting}
+    \begin{lstlisting}
+struct Person : IClonable {
+    Person * clone() {return new Person(*this);}
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Множественное наследование}
+
+    В \langcpp разрешено множественное наследование.
+\begin{lstlisting}
+    struct Person {};
+    struct Student : Person {};
+    struct Worker  : Person {};
+    struct WorkingStudent : Student, Worker {};
+\end{lstlisting}
+    Стоит избегать {\em наследования реализаций} более чем от одного 
+    класса, вместо этого использовать интерфейсы.
+
+\begin{lstlisting}
+    struct IWorker {};
+    struct Worker : Person, IWorker {};
+    struct Student : Person {};
+    struct WorkingStudent : Student, IWorker {};
+\end{lstlisting}
+
+Множественное наследование — это отдельная большая тема.
+\end{frame}
+
+\begin{frame}[fragile]{Дружественные классы}
+\begin{lstlisting}
+struct String {
+    ...
+    friend struct StringBuffer;
+private:
+    char * data_;
+    size_t len_;
+};
+
+struct StringBuffer {
+    void append(String const& s) {
+        append(s.data_);
+    }
+    void append(char const* s) {...}
+    ...
+};                   
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Дружественные функции}{}
+    Дружественные функции можно определять прямо внутри описания
+    класса (они становятся \code{inline}).
+\begin{lstlisting}
+struct String {
+    ...
+    
+    friend void print(String const& s) 
+    {
+        os << s.data_;
+    }
+
+private:
+    char * data_;
+    size_t len_;
+};                   
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Дружественные методы}
+\begin{lstlisting}
+struct String;
+struct StringBuffer {
+    void append(String const& s);
+    void append(char const* s) {...}
+    ...
+};                   
+
+struct String {
+    ...
+    friend 
+      void StringBuffer::append(String const& s);
+};
+        
+void StringBuffer::append(String const& s) {
+    append(s.data_);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Отношение дружбы}
+    Отношение дружбы можно охарактеризовать следующими 
+    утверждениями: 
+    \begin{itemize}
+        \item Отношение дружбы не симметрично.
+        \item Отношение дружбы не транзитивно.
+        \item Отношение наследования не задаёт
+            отношение дружбы.
+        \item Отношение дружбы сильнее, чем 
+            отношение наследования. 
+    \end{itemize}
+    \begin{block}{Вывод}
+        Стоит избегать ключевого слова \code{friend}, так как оно нарушает
+        инкапсуляцию.
+    \end{block}
+\end{frame}
+
+\end{document}
+
+ 
