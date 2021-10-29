@@ -1,0 +1,658 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 8. Perfect-forwarding. Контейнеры.}
+
+\date{
+   \textbf{ИТМО JB}\\
+   26 октября 2021 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Преобразование ссылок в шаблонах}
+    ``Склейка'' ссылок:
+    \begin{itemize}
+    \item \texttt{T\& \&\ \ \ $\to$ T\&}
+    \item \texttt{T\& \&\&\ \  $\to$ T\&}
+    \item \texttt{T\&\& \&\ \  $\to$ T\&}
+    \item \texttt{T\&\& \&\&\  $\to$ T\&\&}
+    \end{itemize}
+
+\begin{block}{Универсальная или пересылающая ссылка}
+\begin{lstlisting}
+template<typename T>
+void foo(T && t) {}
+\end{lstlisting}
+\begin{itemize}
+    \item Если вызвать {\tt foo} от lvalue типа {\tt A}, то {\tt T = A\&}.
+    \item Если вызвать {\tt foo} от rvalue типа {\tt A}, то {\tt T = A}.
+\end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Как работает {\tt std::move}?}
+Определение \texttt{std::move}:
+\begin{lstlisting}
+template<class T> 
+typename remove_reference<T>::type&&
+   move(T&& a) 
+{
+   typedef typename remove_reference<T>::type&& RvalRef;
+   return static_cast<RvalRef>(a);
+}  
+    \end{lstlisting}
+
+
+\begin{block}{Важно}
+    \texttt{std::move} не выполняет никаких действий\\
+    времени выполнения.
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt std::move} для lvalue}
+Вызываем \texttt{std::move} для lvalue объекта.
+\begin{lstlisting}
+X x;
+x = std::move(x);
+\end{lstlisting}
+Тип \texttt{T} выводится как \texttt{X\&}.
+    \begin{lstlisting}
+typename remove_reference<X&>::type&&
+   move(X& && a) 
+{
+   using RvalRef = typename remove_reference<X&>::type&&;
+   return static_cast<RvalRef>(a);
+} 
+    \end{lstlisting}
+После склейки ссылок получаем:
+    \begin{lstlisting}
+X&& move(X& a) 
+{
+   return static_cast<X&&>(a);
+} 
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt std::move} для rvalue}
+Вызываем \texttt{std::move} для временного объекта.
+\begin{lstlisting}
+X x = std::move(X());
+\end{lstlisting}
+Тип \texttt{T} выводится как \texttt{X}.
+    \begin{lstlisting}
+typename remove_reference<X>::type&&
+   move(X&& a) 
+{
+   using RvalRef = typename remove_reference<X>::type&&;
+   return static_cast<RvalRef>(a);
+} 
+    \end{lstlisting}
+После склейки ссылок получаем:
+    \begin{lstlisting}
+X&& move(X&& a) 
+{
+   return static_cast<X&&>(a);
+} 
+    \end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Perfect forwarding}
+    \begin{lstlisting}
+// для lvalue
+template<typename T, typename Arg> 
+auto make_unique(Arg & arg) { 
+    return unique_ptr<T>(new T(arg));
+} 
+
+// для rvalue
+template<typename T, typename Arg> 
+auto make_unique(Arg && arg) { 
+    return unique_ptr<T>(new T(std::move(arg)));
+} 
+    \end{lstlisting}
+
+\texttt{std::forward} позволяет записать это одной функцией.
+    \begin{lstlisting}
+template<typename T, typename Arg> 
+auto make_unique(Arg&& arg) { 
+    return unique_ptr<T>(new T(std::forward<Arg>(arg)));
+} 
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Как работает \texttt{std::forward}?}
+Определение \texttt{std::forward}:
+    \begin{lstlisting}
+template<class S>
+S&& forward(typename remove_reference<S>::type& a) 
+{
+    return static_cast<S&&>(a);
+} 
+    \end{lstlisting}
+
+\begin{block}{Важно}
+    \texttt{std::forward} не выполняет никаких действий\\
+    времени выполнения.
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{std::forward} для lvalue}
+\begin{lstlisting}
+X x;
+auto p = make_unique<A>(x); 	// Arg = X\&
+\end{lstlisting}
+
+\begin{lstlisting}
+unique_ptr<A> make_unique(X& && arg) { 
+  return unique_ptr<A>(new A(std::forward<X&>(arg)));
+} 
+
+X& && forward(remove_reference<X&>::type& a) {
+  return static_cast<X& &&>(a);
+} 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{std::forward} для lvalue}
+После склейки ссылок:
+\begin{lstlisting}
+unique_ptr<A> make_unique(X& arg) { 
+  return unique_ptr<A>(new A(std::forward<X&>(arg)));
+} 
+
+X& forward(X& a) {
+  return static_cast<X&>(a);
+} 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{std::forward} для rvalue}
+\begin{lstlisting}
+auto p = make_unique<A>(X());	// Arg = X
+\end{lstlisting}
+
+\begin{lstlisting}
+unique_ptr<A> make_unique(X&& arg) { 
+  return unique_ptr<A>(new A(std::forward<X>(arg)));
+} 
+
+X&& forward(remove_reference<X>::type& a) {
+  return static_cast<X&&>(a);
+} 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{std::forward} для rvalue}
+После склейки ссылок:
+\begin{lstlisting}
+unique_ptr<A> make_unique(X&& arg) { 
+  return unique_ptr<A>(new A(std::forward<X>(arg)));
+} 
+
+X&& forward(X& a) {
+  return static_cast<X&&>(a);
+} 
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Variadic templates $+$ perfect forwarding}
+Можно применить \texttt{std::forward} для списка параметров.
+\begin{lstlisting}
+template<typename T, typename ...Args> 
+std::unique_ptr<T> make_unique(Args&&... args) {
+    return std::unique_ptr<T>(
+                new T(std::forward<Args>(args)...));
+}
+\end{lstlisting}
+Теперь \texttt{make\_unique} работает для произвольного числа аргументов.
+\begin{lstlisting}
+auto p = make_unique<Array<string>>(10, string("Hello"));
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Общие сведения о контейнерах}
+\small
+    Контейнеры библиотеки STL можно разделить на две категории: 
+    \begin{itemize}
+        \item последовательные, 
+        \item ассоциативные.
+    \end{itemize}
+    \begin{block}{Общие вложенные типы}
+    \begin{itemize} \tt
+        \item Container::value\_type
+        \item Container::iterator, Container::const\_iterator
+    \end{itemize}
+    \end{block}\vspace{-3mm}
+    \begin{block}{Общие методы контейнеров}
+    \begin{itemize}
+    \item \texttt{size, max\_size, empty, clear}.
+    
+    \item \texttt{begin, end, сbegin, сend}.
+
+    \item Операторы сравнения: \texttt{==, !=, >, >=, <, <=}.
+    \end{itemize}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблон {\tt array}}
+    Класс-обёртка над статическим массивом.
+
+\begin{itemize}
+    \item \texttt{operator[], at},
+    \item {\tt back, front}.
+    \item \texttt{fill},
+    \item \texttt{data}.
+\end{itemize}
+Позволяет работать с массивом как с контейнером.
+
+\begin{lstlisting}
+std::array<std::string, 3> a = {"One", "Two", "Three"};
+std::cout << a.size() << std::endl;
+std::cout << a[1] << std::endl;
+
+// ошибка времени выполнения
+std::cout << a.at(3) << std::endl; 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}{Общие методы остальных последовательных контейнеров}
+\begin{itemize}
+    \item Конструктор от двух итераторов.  
+    \item Конструктор от \texttt{count} и \texttt{defVal}.
+    \item Конструктор от \texttt{std::initializer\_list<T>}.
+    \item Методы {\tt back, front}.
+    \item Методы \texttt{push\_back, emplace\_back}    
+    \item Методы {\tt assign}.
+    \item Методы {\tt insert}. 
+    \item Meтоды \texttt{emplace}.
+    \item Методы \texttt{erase} от одного и двух итераторов. 
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблон {\tt vector}}
+    Динамический массив с автоматическим изменением размера\\ при
+    добавлении элементов.
+
+\begin{itemize}
+    \item \texttt{operator[], at},
+    \item \texttt{resize},
+    \item \texttt{capacity, reserve, shrink\_to\_fit},
+    \item \texttt{pop\_back},
+    \item \texttt{data}.
+\end{itemize}
+
+\begin{lstlisting}
+std::vector<std::string> v = {"One", "Two"};
+v.reserve(100);
+v.push_back("Three");
+v.emplace_back("Four");
+// Позволяет работать со старым кодом.
+legacy_function(v.data(), v.size());
+std::cout << v[2] << std::endl;
+\end{lstlisting}
+\end{frame}
+           
+\begin{frame}[fragile]{Шаблон {\tt deque}}
+Контейнер c возможностью быстрой вставки и удаления элементов на
+обоих концах за $O(1)$. Реализован как список указателей на массивы
+фиксированного размера.
+\begin{itemize}
+    \item {\tt operator[], at},
+    \item {\tt resize},
+    \item {\tt push\_front, emplace\_front}
+    \item \texttt{pop\_back, pop\_front},
+    \item \texttt{shrink\_to\_fit}.
+\end{itemize}
+\begin{lstlisting}
+std::deque<std::string> d = {"One", "Two"};
+d.emplace_back("Three");
+d.emplace_front("Zero");
+std::cout << d[1] << std::endl;
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}[fragile]{Шаблон {\tt list}}
+Двусвязный список. В любом месте контейнера 
+вставка и удаление производятся за $O(1)$.
+\begin{itemize}
+    \item {\tt push\_front, emplace\_front},
+    \item \texttt{pop\_back, pop\_front},
+    \item \texttt{splice},
+    \item {\tt merge, remove, remove\_if, reverse, \\sort, unique}.
+\end{itemize}
+\begin{lstlisting}
+std::list<std::string> l = {"One", "Two"};
+l.emplace_back("Three");
+l.emplace_front("Zero");
+std::cout << l.front() << std::endl;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Итерация по списку}
+У списка нет методов для доступа к элементам по индексу.\\
+Можно использовать range-based for:
+\begin{lstlisting}
+using std::string;
+std::list<string> l = {"One", "Two", "Three"};
+for (string & s : l)
+    std::cout << s << std::endl;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Итерация по списку}
+Для более сложных операций нужно использовать \emph{итераторы}.
+\begin{lstlisting}
+std::list<string>::iterator i = l.begin();
+for ( ; i != l.end(); ++i)
+    if (*i == "Two")
+        break;
+l.erase(i);
+\end{lstlisting}
+
+Итератор списка можно перемещать в обоих направлениях:
+\begin{lstlisting}    
+auto last = l.end();
+--last; // последний элемент
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблон \texttt{forward\_list}}
+Односвязный список. В любом месте контейнера 
+вставка и удаление производятся за $O(1)$.
+\begin{itemize}
+    \item \texttt{insert\_after} и \texttt{emplace\_after} вместо \texttt{insert} и \texttt{emplace},
+    \item  \texttt{before\_begin, cbefore\_begin},
+    \item {\tt push\_front, emplace\_front, pop\_front},
+    \item {\tt splice\_after},
+    \item {\tt merge, remove, remove\_if, reverse,\\ sort, unique}.
+\end{itemize}
+
+\begin{lstlisting}
+std::forward_list<std::string> fl = {"One", "Two"};
+fl.emplace_front("Zero");
+fl.push_front("Minus one");
+std::cout << fl.front() << std::endl;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблон {\tt basic\_string}}
+Контейнер для хранения символьных последовательностей.
+\begin{lstlisting}
+typedef basic_string<char>	string;
+typedef basic_string<wchar_t> 	wstring;
+typedef basic_string<char16_t> 	u16string;
+typedef basic_string<char32_t>	u32string;
+\end{lstlisting}
+\begin{itemize}
+    \item Метод {c\_str()} для совместимости со старым кодом, 
+    \item поддержка неявных преобразований с \langc-строками,
+    \item \texttt{operator[], at},
+    \item \texttt{reserve, capacity, shrink\_to\_fit},
+    \item \texttt{append, operator+, operator+=},
+    \item \texttt{substr, replace, compare,} 
+    \item \texttt{find, rfind, find\_first\_of,\\ find\_first\_not\_of,
+    find\_last\_of,\\ find\_last\_not\_of} (в терминах {\em индексов})
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Адаптеры и псевдоконтейнеры}
+    Адаптеры:
+    \begin{itemize}
+        \item {\tt stack} —
+            реализация интерфейса стека.
+
+        \item {\tt queue} —
+            реализация интерфейса очереди.
+
+        \item {\tt priority\_queue} —
+            очередь с приоритетом на куче.
+    \end{itemize}
+    
+    Псевдо-контейнеры:
+    \begin{itemize}
+        \item {\tt vector<bool>}
+        \begin{itemize}
+            \item ненастоящий контейнер (не хранит {\tt bool}-ы),
+            \item использует proxy-объекты.
+        \end{itemize}
+        \item {\tt bitset}\\
+            Служит для хранения битовых масок.\\ Похож на
+            {\tt vector<bool>}.
+                        
+        \item {\tt valarray}\\
+            Шаблон служит для хранения числовых массивов
+            и оптимизирован для достижения повышенной\\ вычислительной
+            производительности. 
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Ещё о {\tt vector}}
+\small\setlength{\baselineskip}{0.6em}
+ \begin{itemize}
+     \item Самый универсальный последовательный контейнер. 
+
+     \item Во многих случаях самый эффективный.
+         
+     \item Предпочитайте \texttt{vector} другим контейнерам.
+ 
+     \item Интерфейс построен на итераторах, а не на индексах.
+ 
+     \item Итераторы ведут себя как указатели.
+\end{itemize}
+
+\medskip
+
+\end{frame}
+
+\begin{frame}[fragile]{Общие сведения}
+Ассоциативные контейнеры делятся на две группы:
+\begin{itemize}
+\item \textit{упорядоченные} (требуют отношение порядка), 
+\item \textit{неупорядоченные} (требуют хеш-функцию).
+\end{itemize}
+\begin{block}{Общие методы}
+\begin{enumerate}
+    \item {\tt find} по ключу,
+    \item {\tt count} по ключу,
+    \item {\tt erase} по ключу.
+\end{enumerate}
+\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблоны {\tt set} и {\tt multiset}}
+\texttt{set} хранит упорядоченное множество (дерево поиска).\\ 
+Операции добавления, удаления и поиска работают за $O(\log n)$.
+Значения в \texttt{set} — неизменяемые.
+\begin{itemize}
+    \item {\tt lower\_bound, upper\_bound, equal\_range}.
+\end{itemize}
+
+\begin{lstlisting}
+std::set<int> primes = {2, 3, 5, 7, 11};
+// дальнейшее заполнение
+if (primes.find(173) != primes.end())
+    std::cout << 173 << " is prime\n";
+    
+// std::pair<iterator, bool>
+auto [it, inserted] = primes.insert(3);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблоны {\tt set} и {\tt multiset}}
+В \texttt{multiset} хранится упорядоченное мультимножество.
+\vspace{-1mm}
+\begin{lstlisting}
+std::multiset<int> fib = {0, 1, 1, 2, 3, 5, 8};
+// iterator
+auto it = fib.insert(13);
+// pair<iterator, iterator>
+auto [it_begin, it_end] = fib.equal_range(1);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблоны {\tt map} и {\tt multimap}}
+Упорядоченное отображение (дерево поиска по ключу).\\ 
+Операции добавления, удаления и поиска работают за $O(\log n)$.
+\begin{lstlisting}
+    using value_type = std::pair<const Key, T>;
+\end{lstlisting}\vspace{-1mm}
+
+\begin{itemize}
+    \item {\tt lower\_bound,} {\tt upper\_bound,} {\tt equal\_range},
+    \item {\tt operator[]}, {\tt at}.
+\end{itemize}\vspace{-1mm}
+\begin{lstlisting}
+std::map<std::string, int> phonebook;
+phonebook.emplace("Marge", 2128506);
+phonebook.emplace("Lisa",  2128507);
+phonebook.emplace("Bart",  2128507);
+// std::map<string,int>::iterator
+auto it = phonebook.find("Maggie");
+if (it != phonebook.end())
+    std::cout << "Maggie: " << it->second << "\n";
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Особые методы {\tt map}: {\tt operator[]} и {\tt at}}
+\begin{lstlisting}
+if (auto it = phonebook.find("Marge"); 
+        it != phonebook.end())
+     it->second = 5550123;
+else 
+    phonebook.emplace("Marge", 5550123);
+// или
+phonebook["Marge"] = 5550123;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Особые методы {\tt map}: {\tt operator[]} и {\tt at}}
+Метод {\tt \code{operator}[]}:
+\begin{enumerate}
+    \item работает только с неконстантным map,
+    \item требует наличие у {\tt T} конструктора по умолчанию,
+    \item работает за $O(\log n)$
+    (не стоит использовать {\tt map} как массив).
+\end{enumerate}
+Метод {\tt at}:
+\begin{enumerate}
+    \item генерирует ошибку времени выполнения,\\
+         если такой ключ отсутствует,
+    \item работает за $O(\log n)$.
+\end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Использование собственного компаратора}
+\begin{lstlisting}
+struct P { string name; string surname; };
+
+bool operator<(P const& a, P const& b) {
+    return a.name < b.name || 
+          (a.name == b.name && a.surname < b.surname);
+}
+// уникальны по сочетанию имя + фамилия
+std::set<P> s1;
+
+struct PComp {
+    bool operator()(P const& a, P const& b) const {
+        return a.surname < b.surname;
+    }
+};
+// уникальны по фамилии
+std::set<P, PComp> s2;
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{Шаблоны {\tt unordered\_set} и {\tt unordered\_multiset}}
+\texttt{unordered\_set} хранит множество как хеш-таблицу.\\ 
+Операции добавления, удаления и поиска за $O(1)$ в среднем.
+Значения в \texttt{unordered\_set} — неизменяемые.
+\begin{itemize}
+	\item {\tt equal\_range}, {\tt reserve},
+	\item методы для работы с хеш-таблицей.
+\end{itemize}\vspace{-1mm}
+
+\begin{lstlisting}
+unordered_set<int> primes = {2, 3, 5, 7, 11};
+// дальнейшее заполнение
+if (primes.find(173) != primes.end())
+    std::cout << 173 << " is prime\n";
+    
+// std::pair<iterator, bool>
+auto [it, inserted] = primes.insert(3);
+\end{lstlisting}
+В \texttt{unordered\_multiset} хранится мультимножество.
+\end{frame}
+
+\begin{frame}[fragile]{Шаблоны {\tt unordered\_map} и {\tt unordered\_multimap}}
+Хранит отображение как хеш-таблицу.\\ 
+Операции добавления, удаления и поиска за $O(1)$ в среднем.
+
+\begin{itemize}
+	\item {\tt equal\_range}, {\tt reserve}, {\tt operator[]}, {\tt at},
+	\item методы для работы с хеш-таблицей.
+\end{itemize}\vspace{-1mm}
+\begin{lstlisting}
+unordered_map<std::string, int> phonebook;
+phonebook.emplace("Marge", 2128506);
+phonebook.emplace("Lisa",  2128507);
+phonebook.emplace("Bart",  2128507);
+
+// unordered\_map<string,int>::iterator
+auto it = phonebook.find("Maggie");
+if (it != phonebook.end())
+    std::cout << "Maggie: " << it->second << "\n";
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Использование собственной хеш-функции}
+\begin{lstlisting}
+struct P { string name; string surname; };
+bool operator==(P const& a, P const& b) { 		
+    return a.name == b.name 
+        && a.surname == b.surname; 
+}
+namespace std {
+    template <> struct hash<P> {
+        size_t operator()(P const& p) const {
+              hash<string> h;
+              return h(p.name) ^ h(p.surname);
+        }
+    };
+}
+// уникальны по сочетанию имя + фамилия
+unordered_set<P> s;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Использование собственной хеш-функции}
+    Общие рекомендации:
+\begin{itemize}
+        \item По возможности лучше не писать свои хеш-функции.
+        \item Для комбинирования лучше использовать специальные функции.
+        \item Пример реализации boost::hash\_combine:
+\begin{lstlisting}
+template <typename T>
+inline void hash_combine(
+    size_t seed,
+    const T & v)
+{
+    std::hash<T> hasher;
+    seed ^= hasher(v) + 0x9e3779b9
+            + (seed<<6) + (seed>>2);
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\end{document}
+
+ 
