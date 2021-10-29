@@ -1,0 +1,944 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 7. Шаблоны.}
+
+\date{
+   \textbf{ИТМО JB}\\
+   19 октября 2021 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Глобальные переменные}
+Объявление глобальной переменной:
+    \begin{lstlisting}
+extern int global;
+
+void f () {
+    ++global; 
+}
+    \end{lstlisting}
+
+Определение глобальной переменной:
+    \begin{lstlisting}
+int global = 10;
+    \end{lstlisting}
+
+Проблемы глобальных переменных:
+\begin{itemize}
+    \item Масштабируемость.
+    \item Побочные эффекты.
+    \item Порядок инициализации.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические глобальные переменные}
+    Статическая глобальная переменная — это глобальная переменная,
+    доступная только в пределах модуля.\\[1em]
+Определение: 
+    \begin{lstlisting}
+static int global = 10;
+
+void f () {
+    ++global; 
+}
+    \end{lstlisting}
+                
+Проблемы статических глобальных переменных:
+\begin{itemize}
+    \item Масштабируемость.
+    \item Побочные эффекты.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические локальные переменные}
+    Статическая локальная переменная — это глобальная переменная,
+    доступная только в пределах функции.\\[1em]
+Время жизни такой переменной~--- от первого вызова функции {\tt next}
+до конца программы.
+    \begin{lstlisting}
+int next(int start = 0) {
+    static int k = start;
+    return k++;
+}
+    \end{lstlisting}
+                
+Проблемы статических локальных переменных:
+\begin{itemize}
+    \item Масштабируемость.
+    \item Побочные эффекты.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические функции}
+    Статическая функция,
+    доступная только в пределах модуля.\\[1em]
+Файл {\tt 1.cpp}:
+    \begin{lstlisting}
+static void test() {
+    cout << "A\n";
+}
+    \end{lstlisting}
+Файл {\tt 2.cpp}:
+    \begin{lstlisting}
+static void test() {
+    cout << "B\n";
+}
+    \end{lstlisting}
+Статические глобальные переменные и статические функции
+проходят {\em внутреннюю линковку}.
+\end{frame}
+
+\begin{frame}[fragile]{Про линковку}
+    \begin{itemize}
+        \item Нас интересуют 2 типа линковки: \code{internal} и \code{external}.
+        \item Внутренняя линковка проходит в рамках одной единицы трансляции (.cpp файла). \\
+        \item Статические глобальные переменные и статические функции, функции в безымянном \code{namespace}
+            проходят внутреннюю линковку.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Статические поля класса}
+    Статические поля класса — это глобальные переменные,
+    определённые внутри класса.\\[1em]
+Объявление:
+\begin{lstlisting}
+struct User {
+    ...
+private:
+    static size_t instances_;
+}; 
+\end{lstlisting}
+Определение:
+\begin{lstlisting}
+size_t User::instances_ = 0;
+\end{lstlisting}
+Для доступа к статическим полям не нужен объект.
+\end{frame}
+
+\begin{frame}[fragile]{Статические методы}
+    Статические методы — это функции, определённые внутри класса и имеющие
+    доступ к закрытым полям и методам.\\[1em]
+Объявление:
+\begin{lstlisting}
+struct User {
+    ...
+    static size_t count() { return instances_; }
+private:
+    static size_t instances_;
+}; 
+\end{lstlisting}
+Для вызова статических методов не нужен объект.
+\begin{lstlisting}
+    cout << User::count();
+\end{lstlisting}
+\end{frame}
+    
+\begin{frame}[fragile]{Ключевое слово \code{inline}}
+    Советует компилятору встроить данную функцию.
+\begin{lstlisting}
+inline double square(double x) { return x * x; }
+\end{lstlisting}
+\begin{itemize}
+    \item В месте вызова \code{inline}-функции должно 
+        быть известно её определение.
+
+    \item \code{inline} функции можно определять 
+        в заголовочных файлах.
+
+    \item Все функции, определённые внутри класса, являются
+        \code{inline}.
+
+    \item При линковке из всех версий \code{inline}-функции
+        (т.е. её код из разных единиц трансляции)
+        выбирается только одна.
+
+    \item Все определения одной и той же \code{inline}-функции
+        должны быть идентичными.
+
+    \item \code{inline} — это совет компилятору, а не указ.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Правило одного определения}
+Правило одного определения (One Definition Rule, ODR)
+\begin{itemize}
+    \item В пределах любой единицы трансляции сущности не могут иметь более одного определения. 
+    \item В пределах программы глобальные переменные и не-\code{inline} функции не могут иметь больше
+        одного определения.
+    \item Классы и \code{inline} функции могут определяться в более чем одной единице
+        трансляции, но определения обязаны совпадать.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Класс Singleton}
+\begin{lstlisting}
+struct Singleton {
+    static Singleton & instance() {
+           static Singleton s;
+           return s;
+    }
+
+    Data & data() { return data_; }
+
+private:
+    Singleton() = default;
+    Singleton(Singleton const&) = delete;
+    Singleton& operator=(Singleton const&) = delete;
+
+    Data data_;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Использование Singleton-а}{}
+\begin{lstlisting}
+    int main()
+    {
+        // первое обращение
+        Singleton & s = Singleton::instance();
+        Data d = s.data();
+
+        // аналогично d = s.data();
+        d = Singleton::instance().data();
+        return 0;    
+    }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Метапрограммирование}
+\begin{itemize}
+    \item {\bf Метапрограммированием} называют создание программ, \\которые порождают другие программы.
+    
+    \item Шаблоны \langcpp можно рассматривать как функциональный\\ язык
+    для метапрограммирования.
+    
+    \item Метапрограммы \langcpp позволяют оперировать типами, \\шаблонами и compile-time значениями.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Метапрограммирование}
+\begin{itemize}    
+    \item Метапрограммирование в \langcpp можно применять\\ для широкого круга задач:
+    \begin{itemize}
+        \item compile-time вычисления,
+        \item compile-time проверка ошибок,
+        \item условная компиляция,
+        \item генеративное программирование,
+        \item \ldots
+    \end{itemize}
+    \item Для метапрограммирования существуют целые\\ библиотеки,
+    например, MPL и Hana из boost.
+\end{itemize}
+    Замечание: сложные шаблоны существенно замедляют компиляцию.
+\end{frame}
+
+\begin{frame}[fragile]{Метафункции}
+Метафункция~--- это шаблонный класс, 
+который определяет \\имя типа \texttt{type} или целочисленную константу \texttt{value}.
+
+
+\begin{itemize}
+\item Аргументы метафункции~--- это аргументы шаблона.
+\item Возвращаемое значение~--- это \texttt{type} или \texttt{value}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Метафункции}
+Метафункции могут возвращать типы:
+\begin{lstlisting}
+template<typename T> 
+struct add_pointer
+{
+    using type = T *; 
+};
+\end{lstlisting}
+и значения целочисленных типов:
+\begin{lstlisting}
+template<int N> 
+struct square
+{
+    static int const value = N * N; 
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Метафункции}
+Для типов удобно использовать шаблонные алиасы имен:
+\begin{lstlisting}
+template<typename T>
+using add_pointer_t = add_pointer<T>::type;
+\end{lstlisting}
+для значений аналогичные константы:
+\begin{lstlisting}
+template<int N> 
+constexpr auto square_v = square<N>::value; 
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Метафункции}
+\begin{lstlisting}
+template<typename T>
+int foo(T * value) {
+    constexpr auto is_pointer = std::is_same_v<
+        int *,
+        add_pointer_t<T>>;
+    if constexpr (is_pointer) { return *value; }
+    else { return square_v<10>; }
+}
+
+int main() {
+    int a = 1;
+    float b = 1.f;
+    foo(&a); // 1
+    foo(&b); // 100
+}
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Вычисления в compile-time}
+\begin{lstlisting}
+template<int N> 
+struct Fact {
+    static int const value
+        = N * Fact<N - 1>::value;
+};
+
+template<> 
+struct Fact<0> {
+    static int const value = 1;
+};
+
+int main() 
+{
+    std::cout << Fact<10>::value << std::endl;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Вычисления в compile-time}
+    Это вычисление можно реализовать через \code{constexpr} функцию.
+\begin{lstlisting}
+constexpr int fact(int N) {
+    if (N == 0) { return 1; }
+    return N * fact(N - 1);
+}
+
+int main() 
+{
+    constexpr auto a = fact(10);
+    std::cout << a << std::endl;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Вычисления в compile-time}
+    Подход без рекурсии.
+\begin{lstlisting}
+constexpr int fact(int N) {
+    int result = 1;
+    for (auto i = 1; i <= N; ++i)
+    {
+        result *= i;
+    }
+    return result;
+}
+
+int main() 
+{
+    constexpr auto a = fact(10);
+    std::cout << a << std::endl;
+}
+\end{lstlisting}
+\end{frame}
+
+%template<int N> struct Fib {
+%    constexpr static int 
+%        value = Fib<N - 1>::value + Fib<N - 2>::value;
+%};
+%template<> struct Fib<0> {
+%    static const int value = 0;
+%};
+%template<> struct Fib<1> {
+%    static const int value = 1;
+%};
+%int main() {
+%    Fib <10>::value << std::endl;
+%}
+
+\begin{frame}[fragile]{Определение списка}
+Шаблоны позволяют определять алгебраические типы данных.
+\begin{lstlisting}
+// определяем список
+template <typename ... Types>
+struct TypeList; 
+
+// специализация по умолчанию
+template <typename H, typename... T>
+struct TypeList<H, T...> 
+{
+    using Head = H;
+    using Tail = TypeList<T...>;
+};
+
+// специализация для пустого списка
+template <>
+struct TypeList<> { };
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Длина списка}
+\begin{lstlisting}
+// вычисление длины списка
+template<typename TL>
+struct Length {
+    static int const value = 1 +
+        Length<typename TL::Tail>::value;
+};
+
+template<>
+struct Length<TypeList<>> {
+    static int const value = 0;
+};
+
+int main() {
+    using TL = TypeList<double, float, int, char>;
+    std::cout << Length<TL>::value << std::endl;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Операции со списком}
+    Добавление элемента в начало списка:
+\begin{lstlisting}
+template<typename H, typename TL>
+struct Cons;
+
+template<typename H, typename... Types>
+struct Cons<H, TypeList<Types...>> {
+    using type = TypeList<H, Types...>;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Операции со списком}
+    Конкатенация списков:
+\begin{lstlisting}
+template<typename TL1, typename TL2>
+struct Concat;
+
+template<typename... Ts1, typename... Ts2>
+struct Concat<TypeList<Ts1...>, TypeList<Ts2...>>
+{
+    using type = TypeList<Ts1..., Ts2...>;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Вывод списка}
+\begin{lstlisting}
+// вывод списка в поток os
+template<typename TL>
+void printTypeList(std::ostream & os) {
+    os << typeid(typename TL::Head).name() << '\n';
+    printTypeList<typename TL::Tail>(os);
+};
+
+// вывод пустого списка
+template<>
+void printTypeList<TypeList<>>(std::ostream &) {}
+
+int main() {
+    using TL = TypeList<double, float, int, char>;
+    printTypeList<TL>(std::cout);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Генерация классов}
+\begin{lstlisting}
+struct A { 
+    void foo() {std::cout << "struct A\n";} 
+};
+struct B { 
+    void foo() {std::cout << "struct B\n";} 
+};
+struct C { 
+    void foo() {std::cout << "struct C\n";} 
+};
+
+using Bases = TypeList<A, B, C>;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Генерация классов}
+\begin{lstlisting}
+template<typename TL>
+struct inherit;
+
+template<typename... Types>
+struct inherit<TypeList<Types...>> : Types... {};
+
+struct D : inherit<Bases> { };
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{Генерация классов}
+\begin{lstlisting}
+struct D : inherit<Bases> {
+    void foo() { foo_impl<Bases>(); } 
+    template<typename L> void foo_impl();
+};
+template<typename L> 
+inline void D::foo_impl() {
+    // приводим this к указателю на базу из списка
+    static_cast<typename L::Head *>(this)->foo();
+    
+    // рекурсивный вызов для хвоста списка
+    foo_impl<typename L::Tail>();
+}
+template<> 
+inline void D::foo_impl<TypeList<>>() {}
+\end{lstlisting}
+\end{frame}
+
+%\begin{frame}[fragile]{CRTP: Polymorphic copy construction}
+%\begin{lstlisting}
+%// Base class has a pure virtual function for cloning
+%struct Shape {
+%    virtual ~Shape() {}
+%    virtual Shape *clone() const = 0;
+%};
+
+%// This CRTP class implements clone() for Derived
+%template <typename Derived>
+%struct Shape_CRTP : public Shape {
+%    virtual Shape *clone() const {
+%        return new Derived(static_cast<Derived const&>(*this));
+%    }
+%};
+% 
+%// Nice macro which ensures correct CRTP usage
+%#define Derive_Shape_CRTP(Type) struct Type: Shape_CRTP<Type>
+% 
+%// Every derived class inherits from Shape\_CRTP instead of Shape
+%Derive_Shape_CRTP(Square) {};
+%Derive_Shape_CRTP(Circle) {};
+%\end{lstlisting}
+%\end{frame}
+
+\begin{frame}[fragile]{SFINAE}
+ SFINAE = Substitution Failure Is Not An Error.\\
+ Ошибка при подстановке шаблонных параметров не является сама по себе ошибкой.
+\begin{lstlisting}
+// ожидает, что у типа T определён 
+// вложенный тип value\_type
+template<class T>
+void foo(typename T::value_type * v);
+
+// работает с любым типом
+template<class T>
+void foo(T t);
+\end{lstlisting}
+\begin{lstlisting}
+// при инстанциировании первой перегрузки
+// происходит ошибка (у int нет value\_type), 
+// но это не приводит к ошибке компиляции
+foo<int>(0);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Полная специализация шаблонов: классы}
+\small
+    \begin{lstlisting}
+template<class T>
+struct Array { ... };
+
+template<>
+struct Array<bool> {
+    static unsigned const BITS = 8 * sizeof(unsigned);
+    explicit Array(size_t size)
+        : size_(size)
+        , data_(new unsigned[size_ / BITS + 1])
+    {}
+    bool operator[](size_t i) const {
+        return data_[i / BITS] & (1 << (i % BITS)); 
+    }
+private:
+    size_t  size_;
+    unsigned *  data_;
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Полная специализация шаблонов: функции}
+\small
+    \begin{lstlisting}
+template<class T>
+void swap(T & a, T & b) {
+    T tmp(a);
+    a = b;
+    b = tmp;
+}
+
+template<>
+void swap<Database>(Database & a, Database & b) {
+    a.swap(b);
+}
+
+template<class T>
+void swap(Array<T> & a, Array<T> & b) {
+    a.swap(b);
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Специализация шаблонов и перегрузка}
+\small
+    \begin{lstlisting}
+template<class T>
+void foo(T, T) { std::cout << "same"; }
+
+template<class T, class V>
+void foo(T, V) { std::cout << "different"; }
+
+template<>
+void foo<int, int>(int, int) { std::cout << "both int"; } 
+
+int main() {
+    foo(3, 4); // same (not both int)
+    foo(3., 4); // different
+    return 0;    
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Частичная специализация шаблонов}
+\small
+    \begin{lstlisting}
+template<class T>
+struct Array {
+    T & operator[](size_t i) { return data_[i]; }
+    ...
+};
+
+template<class T>
+struct Array<T *> {
+    explicit Array(size_t size)
+        : size_(size)
+        , data_(new T *[size_])
+    {}
+    T & operator[](size_t i) { return *data_[i]; }
+private:
+    size_t  size_;
+    T **    data_;
+};
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Как проверить наличие родственных связей?}
+\small
+\begin{lstlisting}
+using YES = char;
+struct NO { YES m[2]; };
+
+template<class B, class D>
+struct is_base_of {
+    static YES test(B * );
+    static NO  test(...);
+    
+    static bool const value = 
+        sizeof(YES) == sizeof(test((D *)0));
+};
+
+template<class D> 
+struct is_base_of<D, D> {
+    static bool const value = false;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Как проверить наличие родственных связей?}
+\small
+\begin{lstlisting}
+namespace details {
+    template <typename B>
+    std::true_type test(B*);
+    template <typename>
+    std::false_type test(void*);
+ 
+    template <typename, typename>
+    auto is_base_of(...) -> std::true_type;
+    template <typename B, typename D>
+    auto is_base_of(int) -> decltype(
+        test<B>(static_cast<D*>(nullptr)));
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Как проверить наличие родственных связей?}
+\small
+\begin{lstlisting}
+template <typename B, typename D>
+struct is_base_of
+    : std::integral_constant<
+        bool,
+        std::is_class_v<B> && std::is_class_v<D> &&
+        decltype(details::is_base_of<B, D>(0))::value
+    >{};
+
+class A {};
+class B : A {};
+ 
+int main() {
+    std::cout << std::is_base_of<A, B>::value; // 1
+    std::cout << std::is_base_of<B, A>::value; // 2
+}
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{Как определить наличие метода?}
+\begin{lstlisting}
+struct A {  void foo() { std::cout << "struct A\n"; } };
+struct B {  }; // нет метода foo()
+struct C {  void foo() { std::cout << "struct C\n"; } };
+\end{lstlisting}
+
+\begin{lstlisting}
+template<typename L> 
+inline void D::foo_impl() 
+{
+    // приводим this к указателю на базу из списка
+    static_cast<typename L::Head *>(this)->foo();
+    
+    // рекурсивный вызов для хвоста списка
+    foo_impl<typename L::Tail>();
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Используем SFINAE}
+\begin{lstlisting}
+template<class T>
+struct is_foo_defined
+{
+    // обёртка, которая позволит проверить
+    // наличие метода foo с заданой сигнатурой
+    template<class Z, void (Z::*)() = &Z::foo>
+    struct wrapper {};
+
+    template<class C>
+    static std::true_type check(wrapper<C> * p);
+    template<class C>
+    static std::false_type check(...);
+
+    static bool const value = std::is_same_v<
+        std::true_type,
+        decltype(check<T>(0))>;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Проверяем наличие метода}
+
+\begin{lstlisting}
+template<class L> 
+void foo_impl() 
+{
+    using Head = typename L::Head;
+    constexpr bool has_foo = 
+        is_foo_defined<Head>::value;
+    if constexpr (has_foo) {
+        // call foo
+    }
+    foo_impl<typename L::Tail>();
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Проверяем наличие метода}
+
+C++20 все сильно упрощает.
+
+\begin{lstlisting}
+template<class T>
+std::string optionalToString(T* obj)
+{
+    constexpr bool has_str = requires(const T& t) {
+        t.toString();
+    };
+
+    if constexpr (has_str)
+        return obj->toString();
+    else
+        return "toString not defined";
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt std::enable\_if}}
+\begin{lstlisting}
+namespace std {
+    template<bool B, class T = void> 
+    struct enable_if {};
+
+    template<class T>
+    struct enable_if<true, T> { using type = T; };
+}
+\end{lstlisting}
+\begin{lstlisting}
+template<class T>
+typename std::enable_if_t<std::is_integral_v<T>, T>
+    div2(T t) { return t >> 1; }
+
+template<class T>
+typename std::enable_if_t<std::is_floating_point_v<T>, T>
+    div2(T t) { return t / 2.0; }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt std::enable\_if}}
+\begin{lstlisting}
+template<class T>
+T div2(T t, typename std::enable_if_t<
+    std::is_integral_v<T>, T> * = 0)
+{ return t >> 1; }
+
+template<class T, class E = typename std::enable_if_t<
+    std::is_floating_point_v<T>::value, T>>
+T div2(T t) 
+{ return t / 2.0; }
+\end{lstlisting}
+
+\begin{lstlisting}
+template<class T, class E = void> 
+class A; 
+ 
+template<class T>
+class A<T, typename std::enable_if_t<
+    std::is_integral_v<T>>> 
+{};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Нетиповые шаблонные параметры}
+\small
+Параметрами шаблона могут быть целочисленные значения.
+    \begin{lstlisting}
+template<class T, size_t N, size_t M>
+struct Matrix {
+    ...
+    T & operator()(size_t i, size_t j) 
+    { return data_[M * j + i]; }
+private:
+    T data_[N * M];
+};
+
+template<class T, size_t N, size_t M, size_t K>
+Matrix<T, N, K> operator*(Matrix<T, N, M> const& a, 
+                          Matrix<T, M, K> const& b);
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Нетиповые шаблонные параметры}
+\small
+Параметрами шаблона могут быть указатели/ссылки на значения с внешней линковкой.
+    \begin{lstlisting}
+// log - это глобальная переменная
+template<ofstream & log>
+struct FileLogger { ... };
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблонные параметры~--- шаблоны}
+Параметрами шаблона могут быть шаблоны.
+\small
+    \begin{lstlisting}
+// int --> string
+string toString( int i );
+
+// работает только с Array<>
+Array<string> toStrings( Array<int> const& ar ) {
+    Array<string> result(ar.size());
+    for (size_t i = 0; i != ar.size(); ++i)
+        result.get(i) = toString(ar.get(i));
+    return result;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Шаблонные параметры~--- шаблоны}
+\small
+    \begin{lstlisting}
+// от контейнера требуются:
+// - конструктор от size
+// - методы size() и get()
+template<template <class> class Container>
+auto toStrings(Container<int> const& c) {
+    Container<string> result(c.size());
+    for (size_t i = 0; i != c.size(); ++i)
+        result.get(i) = toString(c.get(i));
+    return result;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Компиляция шаблонов}
+\small
+    \begin{itemize}
+        \item Шаблон независимо компилируется для каждого значения шаблонных
+            параметров.
+
+        \item Компиляция ({\em инстанциирование}) шаблона происходит в точке первого использования~---
+            {\em точке инстанциирования шаблона}.
+
+        \item Компиляция шаблонов классов~— ленивая, компилируются только те методы,
+            которые используются.
+        
+        \item В точке инстанциирования шаблон должен быть полностью определён.
+
+        \item Шаблоны следует определять в заголовочных файлах.
+
+        \item Все шаблонные функции (свободные функции и методы) являются
+            \code{inline}.
+
+        \item В разных единицах трансляции инстанциирование происходит
+            независимо.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Резюме про шаблоны}
+\small
+    \begin{itemize}
+        \item
+            Большие шаблонные классы следует разделять на два заголовочных файла:
+            объявление (\texttt{array.hpp}) и определение (\texttt{array\_impl.hpp}).
+
+        \item Частичная специализация и шаблонные параметры по умолчанию
+            есть только у шаблонов классов.
+
+        \item Вывод шаблонных параметров есть только у шаблонов функций.
+
+        \item Предпочтительно использовать перегрузку шаблонных функций вместо
+            их полной специализации.
+
+        \item Полная специализация функций~--- это обычные функции.
+    
+        \item Виртуальные методы, конструктор по умолчанию, конструктор
+            копирования, оператор присваивания и деструктор не могут быть
+            шаблонными.
+        \item Используйте \code{typedef} или \code{using} для длинных шаблонных имён.
+    \end{itemize}
+\end{frame}
+
+\end{document}
+
+ 
