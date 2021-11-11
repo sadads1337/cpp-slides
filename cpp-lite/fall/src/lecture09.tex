@@ -1,0 +1,517 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 9. Итераторы. Исключения.}
+
+\date{
+   \textbf{ИТМО JB}\\
+   2 ноября 2021 \\
+   Санкт-Петербург
+}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Категории итераторов}
+\small
+    \emph{Итератор}~— объект для доступа к элементам
+    последовательности, синтаксически похожий на указатель.
+
+    Итераторы делятся на пять категорий: 
+    \begin{itemize}
+        \item {\bf Random access iterator}: {\tt ++, \verb!--!}, арифметика, {\tt <, >, <=, >=}.\\
+        (\texttt{array, vector, deque})
+        
+        \item \langcpp[20]: {\bf Contiguous iterator}: {\tt ++, \verb!--!}, арифметика, {\tt <, >, <=, >=}. \\
+        (\texttt{array, vector})
+
+        \item {\bf Bidirectional iterator}: {\tt ++, \verb!--!}.\\
+        (\texttt{list, set, map})
+
+        \item {\bf Forward iterator}: {\tt ++}.\\
+        (\texttt{forward\_list, unordered\_set, unordered\_map})
+
+        \item {\bf Input iterator}: {\tt ++}, read-only.
+
+        \item {\bf Output iterator}: {\tt ++}, write-only.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Работа с итераторами}
+    Функции для работы с итераторами:
+\begin{lstlisting}
+    void   advance  (Iterator & it, long n);
+    size_t distance (Iterator f, Iterator l);
+    void   iter_swap(Iterator i, Iterator j);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt iterator\_traits}}
+    Позволяет реализовывать алгоритмы в терминах итераторов, даже если тип не имеет соответствующих \code{typedef}.
+\begin{lstlisting}
+template <class Iterator>
+struct iterator_traits {
+   typedef difference_type   Iterator::difference_type;
+   typedef value_type        Iterator::value_type;
+   typedef pointer           Iterator::pointer;
+   typedef reference         Iterator::reference;
+   typedef iterator_category Iterator::iterator_category;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt iterator\_traits}}
+\begin{lstlisting}
+template <class T>
+struct iterator_traits<T *> {
+    typedef difference_type   ptrdiff_t;
+    typedef value_type        T;
+    typedef pointer           T*;
+    typedef reference         T&;
+    typedef iterator_category random_access_iterator_tag;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt iterator\_traits}}
+\begin{lstlisting}
+template<class BidirIt>
+void my_reverse(BidirIt first, BidirIt last)
+{
+    using diff_t = typename 
+        std::iterator_traits<BidirIt>::difference_type;
+    diff_t n = std::distance(first, last);
+    for (--n; n > 0; n -= 2) {
+        uisng value_t = typename 
+            std::iterator_traits<BidirIt>::value_type;
+        const value_t tmp = *first;
+        *first++ = *--last;
+        *last = tmp;
+    }
+}
+\end{lstlisting}
+\end{frame}
+ 
+\begin{frame}[fragile]{{\tt iterator\_category}}
+    Позволяют выбрать более оптимальную реализацию алгоритма.
+\begin{lstlisting}
+struct random_access_iterator_tag {};
+struct bidirectional_iterator_tag {};
+struct forward_iterator_tag {};
+struct input_iterator_tag {};
+struct output_iterator_tag {};
+struct contiguous_iterator_tag {}; // C++20
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt iterator\_category}}
+\begin{lstlisting}
+template<class I>
+void advance_impl(I & i, long n, random_access_iterator_tag) { 
+    i += n; 
+}
+
+template<class I>
+void advance_impl(I & i, size_t n, ... ) { 
+   for (size_t k = 0; k != n; ++k, ++i );
+}
+
+template<class I>
+void advance(I & i, size_t n) {
+    using it_cat = typename 
+        iterator_traits<I>::iterator_category
+   advance_impl(i, n, it_cat());
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt reverse\_iterator}}
+    У некоторых контейнеров есть обратные итераторы: 
+\begin{lstlisting}
+list<int> l = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }; 
+// list<int>::reverse\_iterator
+for(auto i = l.rbegin(); i != l.rend(); ++i)
+    cout << *i << endl;
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Конвертация итераторов}
+Конвертация итераторов:
+\begin{lstlisting}
+list<int>::iterator i = l.begin();
+advance(i, 5); // i указывает на 5
+// ri указывает на 4
+list<int>::reverse_iterator ri(i); 
+i = ri.base();
+\end{lstlisting}
+
+Есть возможность сделать обратный итератор из random access\\ или bidirectional при помощи шаблона 
+\texttt{reverse\_iterator}.
+\begin{lstlisting}
+// <iterator>
+template <class Iterator> 
+class reverse_iterator {...};
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{Инвалидация итераторов}
+    Некоторые операции над контейнерами делают существующие итераторы
+    некорректными (\emph{инвалидация} итераторов).
+    
+    \begin{enumerate}
+        \item Удаление делает некорректным итератор на удалённый элемент в любом контейнере.
+        \item В \texttt{vector} и \texttt{string}
+            добавление потенциально инвалидирует все итераторы (может произойти выделение нового буфера), иначе инвалидируются только итераторы на все следующие элементы.
+        \item В \texttt{vector} и \texttt{string} удаление элемента инвалидирует итераторы на все следующие элементы.
+        \item В \texttt{deque} удаление/добавление инвалидирует все итераторы, кроме 
+            случаев удаления/добавления первого или последнего элементов.
+        
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Advanced итераторы}
+Для пополнения контейнеров:\\
+{\tt back\_inserter, front\_inserter, inserter}.
+\begin{lstlisting}
+// в классе Database
+template<class OutIt>
+void findByName(string name, OutIt out);
+\end{lstlisting}
+\begin{lstlisting}
+// размер заранее неизвестен
+vector<Person> res; 
+Database::findByName("Rick", back_inserter(res));
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Advanced итераторы}
+Для работы с потоками: \\{\tt istream\_iterator, ostream\_iterator}.
+\begin{lstlisting}
+ifstream file("input.txt");
+vector<double> v((istream_iterator<double>(file)), 
+                  istream_iterator<double>());
+    
+copy(v.begin(), v.end(), 
+     ostream_iterator<double>(cout, "\n"));
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Как написать свой итератор}
+\begin{lstlisting}
+template <
+ class Category, // iterator::iterator\_category
+ class T,        // iterator::value\_type
+ class Distance = ptrdiff_t,// iterator::difference\_type
+ class Pointer = T*,        // iterator::pointer
+ class Reference = T&       // iterator::reference
+>
+struct iterator;
+\end{lstlisting}
+
+\begin{lstlisting}
+struct PersonIterator 
+    : std::iterator<forward_iterator_tag, Person>
+{
+  // operator++, operator*, ... 
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Логические ошибки и исключительные ситуации}
+\begin{itemize}
+\item \textbf{Логические ошибки}.\\
+Ошибки в логике работы программы, которые происходят 
+из-за неправильно написанного кода, т.е. это ошибки программиста:
+\begin{itemize} 
+    \item выход за границу массива,
+    \item попытка деления на ноль,
+    \item обращение по нулевому указателю,
+    \item \ldots
+\end{itemize}
+\item \textbf{Исключительные ситуации}.\\
+Ситуации, которые требуют особой обработки.\\
+Возникновение таких ситуаций~— это ,,нормальное``  поведение программы.
+\begin{itemize} 
+    \item ошибка записи на диск,
+    \item недоступность сервера,
+    \item неправильный формат файла,
+    \item \ldots
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Выявление логических ошибок на этапе разработки}
+    Оператор \code{static\_assert}.\\
+    \mbox{}
+    \begin{lstlisting}
+#include<type_traits>
+
+template<class T> 
+void countdown(T start) 
+{
+    static_assert(std::is_integral<T>::value
+               && std::is_signed<T>::value, 
+                  "Requires signed integral type");
+                  
+    while (start >= 0) {
+        std::cout << start-- << std::endl;
+    }
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Выявление логических ошибок на этапе разработки}
+    Макрос \code{assert}.
+    \begin{lstlisting}
+#include<type_traits>
+//\#define NDEBUG
+#include <cassert>
+
+template<class T> 
+void countdown(T start) 
+{
+    assert(start >= 0);
+    while (start >= 0) {
+        std::cout << start-- << std::endl;
+    }
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Способы сообщения об ошибке}
+\small
+        \fakeitem Возврат статуса операции:
+    \begin{lstlisting}
+bool write(string file, string data, size_t & bytes);
+    \end{lstlisting}
+
+        \fakeitem Возврат кода ошибки:
+    \begin{lstlisting}
+int const OK = 0, IO_WRITE_FAIL = 1, IO_OPEN_FAIL = 2;
+int write(string file, string data, size_t & bytes);
+    \end{lstlisting}
+
+        \fakeitem Глобальная переменная для кода ошибки:
+    \begin{lstlisting}
+size_t write(string file, string data);
+    \end{lstlisting}
+
+    \begin{lstlisting}
+size_t bytes = write(f, data);
+if (errno) {
+    cerr << strerror(errno);
+    errno = 0;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Исключения}
+\begin{lstlisting}
+size_t write(string file, string data) {
+    if (!open(file)) throw FileOpenError(file);
+    //...
+}
+
+double safediv(int x, int y) {
+    if (y == 0) throw MathError("Division by zero");
+    return double(x) / y;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Исключения}
+\begin{lstlisting}
+void write_x_div_y(string file, int x, int y) {
+    try { 
+        write(file, to_string(safediv(x, y)));
+    } catch (MathError & s) { 
+        // обработка ошибки в safediv
+    } catch (FileError & e) { 
+        // обработка ошибки в write
+    } catch (...) {
+        // все остальные ошибки
+    }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Stack unwinding}
+При возникновении исключения объекты на стеке
+уничтожаются в естественном (обратном) порядке.
+\begin{lstlisting}
+void foo() {
+    A a;
+    if (!a) throw Error();
+    B b;
+}
+void bar() {
+    C d;
+    try {
+        D d;
+        foo();
+    } catch (const Error &) { throw OtherError; }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Почему не стоит бросать встроенные типы}
+\begin{lstlisting}
+int foo() {
+    if (...) throw -1;
+    if (...) throw 3.1415;
+}
+void bar(int a) {
+    if (a == 0) throw string("Not my fault!");
+}
+int main () {
+    try { bar(foo()); }
+    catch (string & s) { /*only str*/ }
+    catch (int a) { /*only int*/ }
+    catch (double d) { /*only double*/ }
+    catch (...) { /*nothing*/ }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Стандартные классы исключений}
+    Базовый класс для всех исключений (в {\tt <exception>}):
+    \begin{lstlisting}
+struct exception {
+  virtual ~exception();
+  virtual const char* what() const;
+}; 
+    \end{lstlisting}
+
+    Стандартные классы ошибок (в {\tt stdexcept}):\\
+    \begin{itemize}
+        \item {\tt logic\_error}: 
+     {\tt domain\_error}, {\tt invalid\_argument}, {\tt length\_error}, {\tt
+     out\_of\_range} 
+        \item {\tt runtime\_error}: 
+        {\tt range\_error},
+        {\tt overflow\_error}, 
+        {\tt underflow\_error}
+    \end{itemize}
+\end{frame}
+
+ 
+
+\begin{frame}[fragile]{Исключения в стандартной библиотеке}
+\small
+\begin{itemize}
+    \item Метод \texttt{at} контейнеров {\tt array}, {\tt vector}, {\tt deque}, {\tt basic\_string}, {\tt bitset}, {\tt map}, {\tt unordered\_map} бросает {\tt out\_of\_range}.
+    \item Оператор \code{new} {\tt T} бросает {\tt bad\_alloc}.\\
+    Оператор {\tt \code{new} (std::nothrow) T} в возвращает 0.
+    \item Оператор \code{typeid} от разыменованного нулевого указателя бросает {\tt bad\_typeid}.
+
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Исключения в стандартной библиотеке}
+\small
+\begin{itemize}
+    \item Потоки ввода-вывода. 
+    \begin{lstlisting}
+std::ifstream file;
+file.exceptions(std::ifstream::failbit
+    | std::ifstream::badbit);
+try {
+    file.open("test.txt");
+    cout << file.get() << endl;
+    file.close();
+}
+catch (std::ifstream::failure const& e) {
+    cerr << e.what() << endl;
+}
+    \end{lstlisting}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Исключения в деструкторах}
+Исключения не должны покидать деструкторы.
+\begin{itemize}
+\item Двойное исключение:
+\begin{lstlisting}
+void foo() {
+    try {
+        Bad b; // исключение в деструкторе
+        bar(); // исключение
+    } catch (std::exception & e) {
+        // ...
+    }
+}
+\end{lstlisting}
+\item Неопределённое поведение:
+\begin{lstlisting}
+void bar() {
+    Bad * bad = new Bad[100];
+    delete [] bad; // ислючение в деструкторе
+}
+\end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Исключения в конструкторе}
+Исключения — это единственный способ
+прервать  конструирование объекта и сообщить об ошибке.
+
+\begin{lstlisting}
+struct Database {
+   explicit Database(string const& uri) {
+      if (!connect(uri)) throw ConnectionError(uri);
+   }
+   ~Database() { disconnect(); }
+};
+int main() try {
+    Database * db = new Database("db.local");
+    db->dump("db-local-dump.sql");
+    delete db;
+} catch (std::exception const& e) {
+    std::cerr << e.what() << std::endl;
+}
+
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Исключения в списке инициализации}
+Позволяет отловить исключения при создании полей класса.
+\begin{lstlisting}
+struct System 
+{
+    System(string const& uri, string const& data)
+    try : db_(uri), dh_(data)
+    { ... }
+    catch (std::exception & e) 
+    {
+        log("System constructor: ", e);
+        throw;
+    }
+    
+    Database    db_;
+    DataHolder  dh_;
+};   
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{Как обрабатывать ошибки?}
+    Есть несколько ,,правил хорошего тона``.
+    \begin{itemize}
+        \item Разделяйте ошибки программиста и исключительные ситуации.
+        \item Используйте \code{assert} и \code{static\_assert} для выявления ошибок на этапе разработки.
+        \item В пределах одной логической части кода обрабатывайте ошибки централизованно и однообразно.
+        \item Обрабатывайте ошибки там, где их можно обработать.
+        \item Если в данном месте ошибку не обработать, то пересылайте её выше при помощи исключения.
+        \item Бросайте только стандартные классы исключений или производные от них.
+        \item Бросайте исключения по значению, а ловите по ссылке.
+        \item Отлавливайте все исключения в точке входа.
+
+    \end{itemize}
+\end{frame}
+
+\end{document}
+
+ 
