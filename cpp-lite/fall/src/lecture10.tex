@@ -1,0 +1,381 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 10. Многопоточное программирование.}
+
+\date{
+   \textbf{ИТМО JB}\\
+   9 ноября 2021 \\
+   Санкт-Петербург
+}
+
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Многопоточное исполнение}
+    Все современные программы многопоточные. \\
+    Какие проблемы решают разработчики?
+    \begin{itemize}
+        \item Deadlock'и.\\
+        \begin{tabular}{ | l | l | l | }
+            \hline
+            Шаг & Процесс 1 & Процесс 2 \\ \hline
+            0 & \specialcell{Хочет захватить A и B,\\ начинает с A} & \specialcell{Хочет захватить A и B,\\ начинает с B} \\ \hline
+            1 & Захватывает ресурс A & Захватывает ресурс B \\ \hline
+            2 & \specialcell{Ожидает освобождения\\ ресурса B} & \specialcell{Ожидает освобождения\\ ресурса A} \\ \hline
+        \end{tabular}
+        \item Race condition'ы.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Многопоточное исполнение}
+    Какие абстракции у нас есть?
+    \begin{itemize}
+        \item \code{std::thread}.
+        \item \code{std::future} и \code{std::promise}.
+        \item \code{std::atomic} и CAS.
+        \item \code{co\_await}, \code{co\_yield} и \code{co\_return} (\langcpp[20]).
+    \end{itemize}
+    Какие библиотеки у нас есть?
+    \begin{itemize}
+        \item pthread.
+        \item Boost.
+        \item OpenMP и MPI.
+        \item OpenCL и CUDA.
+        \item \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация}
+    Какие инструменты синхронизации есть?
+    \begin{itemize}
+        \item \code{std::mutex}, \code{std::recursive\_mutex}, \dots
+        \item \code{std::lock\_guard}, \code{std::scoped\_lock}, \code{std::unique\_lock}.
+        \item \code{std::counting\_semaphore}, \code{std::binary\_semaphore} (\langcpp[20]).
+        \item \code{std::conditional\_variable}, \dots
+        \item \code{std::memory\_ordering}.
+    \end{itemize}
+    С помощью этих инструментов мы можем строить более сложные примитивы.
+\end{frame}
+
+\begin{frame}[fragile]{Просто кот}
+    \begin{center}
+        \includegraphics[height=50mm]{cat.jpg}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Асинхронное выполнение}
+Пусть мы хотим вычислить \texttt{doAsyncWork} асинхронно.
+\begin{lstlisting}
+int doAsyncWork(); // many work here
+\end{lstlisting}
+
+В \langcpp есть несколько способов выполнения задач асинхронно:
+\begin{itemize}
+    \item создать поток вручную \code{std::thread},
+    \item использование \code{std::async},
+    \item использовать корутины.
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Асинхронное выполнение - вариант 1}
+
+\begin{lstlisting}
+int doAsyncWork(); // many work here
+\end{lstlisting}
+
+\begin{lstlisting}
+#include <thread>
+
+int main()
+{
+    std::thread t(doAsyncWork);
+    ...
+    t.join();
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{std::thread}
+    \begin{itemize}
+        \item Сразу же начинает вычислять переданную функцию.
+
+        \item Игнорирует возвращаемое значение функции.
+    \end{itemize}
+\begin{lstlisting}
+int main()
+{
+    int res = 0; // here we store the result
+    std::thread t([&res](){res = doAsyncWork();});
+    ...
+    t.join();
+    // res is ready here.
+    ...
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{std::thread}       
+    \begin{itemize}
+        \item Метод \code{join()} позволяет заблокировать текущий поток,\\ пока
+            выполнение потока не завершится.
+        \item Метод \code{detach()} позволяет отключить поток от объекта,\\
+            т.е. разорвать связь между объектом и потоком.
+        \item При вызове деструктора подключаемого потока программа
+            завершается, т.е. необходимо вызвать \code{join} или \code{detach}.
+        \item Исключения не могут покидать пределы потока.
+        \item Метод \code{native\_handle()} возвращает дескриптор потока.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Асинхронное выполнение - вариант 2}
+
+\begin{lstlisting}
+int doAsyncWork(); // many work here
+\end{lstlisting}
+
+\begin{lstlisting}
+#include <future>
+
+int main()
+{
+    std::future<int> fut = std::async(doAsyncWork);
+    ...
+    int res = fut.get(); // or wait()
+}
+\end{lstlisting}
+
+\code{std::async} может (зависит от планировщика) отложить выполнение задачи до вызова \code{get} или \code{wait}.
+\end{frame}
+
+\begin{frame}[fragile]{std::async}
+    \begin{itemize}
+        \item Имеет две стратегии выполнения: асинхронное выполнение и
+            отложенное (синхронное/ленивое) выполнение.
+                \begin{enumerate}
+                    \item \code{std::launch::async}
+                    \item \code{std::launch::deferred}
+                \end{enumerate}
+        \item По умолчанию имеет стратегию:\\
+             \code{std::launch::async | std::launch::deferred}
+\end{itemize}
+\begin{lstlisting}
+int main()
+{
+    std::future<int> fut = std::async(
+        std::launch::async,
+        doAsyncWork);
+    ...
+    int res = fut.get();
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{std::async}
+\begin{itemize}
+        \item Отложенная задача может никогда не выполниться,\\
+            если не будет вызвано \code{get} или \code{wait}.
+        \item Возвращает \code{std::future<T>}, который\\ позволяет
+            получить возвращаемое значение.
+        \item Позволяет обрабатывать исключения.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Асинхронное выполнение - вариант 3}
+Функция является корутиной, если выполнено одно из следующих условий:
+\begin{itemize}
+    \item Использует оператор \code{co\_await} для приостановки исполнения
+    \begin{lstlisting}
+task<> tcp_echo_server() {
+  char data[1024];
+  while (true) {
+    size_t n = co_await 
+        socket.async_read_some(buffer(data));
+    co_await async_write(socket, buffer(data, n));
+  }
+}
+    \end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Асинхронное выполнение - вариант 3}
+Функция является корутиной, если выполнено одно из следующих условий:
+\begin{itemize}
+    \item Использует ключевое слово \code{co\_return} для завершения исполнения и возврата результата.
+    \begin{lstlisting}
+lazy<int> f() { co_return 7; }
+    \end{lstlisting}
+    \item Использует ключевое слово \code{co\_yield} для приостановки исполнения и возврата результата.
+    \begin{lstlisting}
+generator<int> iota(int n = 0) {
+  while(true)
+    co_yield n++;
+}
+    \end{lstlisting}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Асинхронное выполнение - вариант 3}
+Пример с использованием библиотеки \code{cppcoro}:
+    \begin{lstlisting}
+#include <cppcoro/generator.hpp>
+#include <iostream>
+
+cppcoro::generator<int> iota(int n = 0) {
+  while(true)
+    co_yield n++;
+}
+
+void usage()
+{
+  for (auto i : iota(1000))
+  {
+    std::cout << i << std::endl;
+  }
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация: mutex}
+    \begin{lstlisting}
+double shared = 0; std::mutex mtx;
+
+void compute(int begin, int end)  {
+    for (int i = begin; i != end; ++i) {
+        double current = someFunction(i);        
+        // critical section
+        std::scoped_lock lock(mtx);
+        shared += current;        
+    }
+}
+
+int main() {
+  std::thread th1 (compute, 0,   100);
+  std::thread th2 (compute, 100, 200);
+  th1.join(); th2.join();
+  std::cout << shared << std::endl;
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация: semaphore}
+    \begin{lstlisting}
+std::binary_semaphore mainToThread(0), threadToMain(0);
+void worker() {
+	mainToThread.acquire(); // wait
+	std::cout << "[thread] Got the signal\n";
+	using namespace std::literals;
+	std::this_thread::sleep_for(3s);
+	std::cout << "[thread] Send the signal\n";
+	threadToMain.release(); // send
+}
+int main() {
+	std::jthread thrWorker(worker);
+	std::cout << "[main] Send the signal\n";
+	mainToThread.release(); // send
+	threadToMain.acquire(); // wait
+	std::cout << "[main] Got the signal\n";
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация: semaphore}
+    \begin{lstlisting}
+[main] Send the signal
+[thread] Got the signal
+[thread] Send the signal
+[main] Got the signal
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{std::atomic}
+    \begin{itemize}
+        \item Шаблон \code{std::atomic} позволяет определить переменную,
+            операции с которой будут атомарны.
+        \item Определён только для целочисленных встроенных типов и указателей.
+    \end{itemize}
+
+\begin{lstlisting}
+template<class T>
+struct shared_ptr_data {
+    void addref() {
+        ++counter; // atomic increment
+    }
+    
+    T * ptr;
+    std::atomic<size_t> counter;
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация: lock-free}
+    \begin{lstlisting}
+template<class T>
+struct Node {
+    T data;
+    Node * next;
+    Node(const T& data)
+    : data(data)
+    , next(nullptr) {}
+};
+
+template<class T>
+class Stack {
+    std::atomic<node<T>*> head;
+public:
+    void push(const T& data);
+};
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация: lock-free}
+    \begin{lstlisting}
+template<class T>
+void Stack<T>::push(const T& data)
+{
+    Noe<T>* new_node = new node<T>(data);
+    new_node->next = head.load(std::memory_order_relaxed);
+    while(!std::atomic_compare_exchange_weak_explicit(
+        &head,
+        &new_node->next,
+        new_node,
+        std::memory_order_release,
+        std::memory_order_relaxed))
+    ; // the body of the loop is empty
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Синхронизация: lock-free}
+    \begin{lstlisting}
+int main() {
+    Stack<int> s;
+    s.push(1);
+    s.push(2);
+    s.push(3);
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Общие советы и замечания}
+    \begin{itemize}
+        \item При использовании \code{std::thread} следите за тем,\\ чтобы исключения не покидали функцию потока.
+        \item Предпочитайте \code{std::async} прямому созданию потоков*.
+        \item Критические секции должны быть минимальными.
+        \item Используйте \code{std::atomic} вместо мьютекса,\\
+            когда синхронизация нужна только для одной\\ целочисленной
+            переменной.
+        \item Помните про thread-санитайзер.
+        \item \code{volatile}~--- это не про многопоточность.
+    \end{itemize}
+    {\bf*Полезные замечания:}\\
+        \href{https://youtu.be/dig9jrcCmLU}{Сергей Видюк, Нестандартный future/promise}
+\end{frame}
+
+\end{document}
+
+ 
