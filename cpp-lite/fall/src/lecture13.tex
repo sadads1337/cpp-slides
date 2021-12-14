@@ -1,0 +1,253 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 13. Сериализация и десериализация}
+
+\date{
+   \textbf{ИТМО JB}\\
+   14 декабря 2021 \\
+   Санкт-Петербург
+}
+
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Сериализация и десериализация}
+    \begin{itemize}
+        \item {\bf Сериализация} ~-- процесс перевода структуры данных в последовательность байтов.
+        \item {\bf Десериализация} ~-- создание структуры данных из битовой последовательности (обратная операция).
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Как можно сериализовать?}
+    \begin{itemize}
+        \item С помощью текстового представления. \\Например, в форматы: ~{\bf XML}, {\bf JSON}, \dots.
+        \item В бинарные форматы. \\Например, в специализированные форматы для хранения больших объемов данных: ~{\bf HDF}, {\bf netCDF} или более старый {\bf GRIB}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Зачем это может быть нужно?}
+    \begin{itemize}
+        \item Для передачи данных по сетевым протоколам.
+        \item Для сохранения информации на файловую систему.
+        \item Для удаленного вызова процедур {\bf RPC}.
+        \item \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Как это можно сделать?}
+    \begin{minipage}{.5\textwidth}
+        {\bf Путь инженера:}
+        \begin{itemize}
+            \item Выбираем подходящий текстовый формат.
+            \item Выбираем подходящую библиотеку для чтения/записи нашего формата.
+            \item Реализуем запись/чтение файла с помощью это библиотеки.
+        \end{itemize}
+    \end{minipage}\hfill
+    \begin{minipage}{.5\textwidth}
+        {\bf Путь джедая:}
+        \begin{itemize}
+            \item Придумываем и описываем наш собственный бинарный формат.
+            \item Пишем библиотеку/утилиту для работы с нашим форматом.
+            \item Реализуем запись/чтение с помощью нашей библиотеки/утилиты.
+            \item Чиним баги...
+        \end{itemize}
+    \end{minipage}
+\end{frame}
+
+\begin{frame}[fragile]{Библиотеки для работы с текстовым представлением}
+    Для XML:
+    \begin{itemize}
+        \item pugixml, tinyxml, rapidxml, \dots
+    \end{itemize}
+    Для JSON:
+    \begin{itemize}
+        \item jsoncpp, rapidjson, \dots
+    \end{itemize}
+    Для YML:
+    \begin{itemize}
+        \item yaml-cpp, rapidyaml, \dots
+    \end{itemize}
+    Другие форматы: \dots
+\end{frame}
+
+\begin{frame}[fragile]{Про путь джедая}
+    \begin{center}
+        \includegraphics[height=50mm]{dolphin.jpg}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Про путь джедая}
+    \begin{center}
+        \includegraphics[height=50mm]{enaken.jpg}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Проблемы при разработке формата}
+    \begin{itemize}
+        \item Высокая сложность в разработке и отладке.
+        \item Сложные оптимизация для оптимального хранения данных.
+        \item Всегда много багов, требуется хорошее тестовое покрытие.
+        \item В перспективе, такой код тяжело поддерживать.
+        \item Возникают проблемы с версионированием.
+        \item \dots
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Путь инженера-джедая}
+    \begin{itemize}
+        \item Для сериализации/десериализации будем использовать готовые и гибкие решения.
+        \item Примеров таких решений: {\bf protobuf}, {\bf flatbuffers}, \dots
+        \item Позволяют избежать сложностей связанных с разработкой и сконцентрироваться на самом формате (на описании структур данных).
+    \end{itemize}
+    Далее в качестве примера рассмотрим {\bf protobuf}.
+\end{frame}
+
+\begin{frame}[fragile]{Protocol buffers}
+    \begin{itemize}
+        \item Протокол сериализации (передачи) структурированных данных, 
+            предложенный Google как эффективная бинарная альтернатива текстовому формату XML. 
+        \item Проще, компактнее и быстрее, чем XML, 
+            поскольку осуществляется передача бинарных данных, оптимизированных под минимальный размер сообщения.
+        \item Интерфейс поддерживает несколько популярных языков: {\bf C++}, {\bf Java}, {\bf Kotlin}, {\bf C#}, {\bf Go}, \dots
+        \item Последняя актуальная версия версия {\bf 3.19.1} (октябрь 2021).
+        \item \url{https://developers.google.com/protocol-buffers/docs/cpptutorial}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Алгоритм работы с protobuf}
+    \begin{itemize}
+        \item Описываем наши структуры данных в {\bf proto-файле}.
+        \item Компилируем с помощью {\bf protoc}.
+        \item Подключаем сгенерированные заголовки к нашему проекту.
+        \item Работаем с бинарным представлением. Читаем/записываем/модифицируем.
+        \item Возможно расширяем наш {\bf proto-формат}.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Описание формата}
+    \lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+    keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+    commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+    \small
+    \begin{lstlisting}
+syntax = "proto3";
+
+package tutorial;
+
+message Person {
+  string name = 1;
+  int32 id = 2;
+  string email = 3;
+  enum PhoneType {
+    MOBILE = 0;
+    HOME = 1;
+    WORK = 2;
+  }
+  message PhoneNumber {
+    string number = 1;
+    PhoneType type = 2 [default = HOME];
+  }
+  repeated PhoneNumber phones = 4;
+}
+
+message AddressBook {
+  repeated Person people = 1;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Генерация кода}
+    Запускаем компиляцию вручную:
+\begin{lstlisting}
+protoc 
+    -I=$SRC_DIR 
+    --cpp_out=$DST_DIR 
+    $SRC_DIR/addressbook.proto
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Генерация кода}
+    Используем вспомогательные функции из cmake:
+    \lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+    keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+    commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+    \small
+\begin{lstlisting}
+include(FindProtobuf)
+find_package(Protobuf REQUIRED)
+include_directories(${PROTOBUF_INCLUDE_DIR})
+
+# to find *.pb.h files
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
+protobuf_generate_cpp(PROTO_SRC PROTO_HEADER src/proto/addressbook.proto)
+add_library(proto ${PROTO_HEADER} ${PROTO_SRC})
+add_executable(main main.cpp)
+target_link_libraries(main proto ${PROTOBUF_LIBRARY})
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Результат генерации}
+    Сгенерировали 2 файла: {\bf addressbook.pb.h} и {\bf addressbook.pb.cc}.
+    \lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+    keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+    commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+    \small
+\begin{lstlisting}
+// name
+inline bool has_name() const;
+inline void clear_name();
+inline const ::std::string& name() const;
+inline void set_name(const ::std::string& value);
+inline void set_name(const char* value);
+inline ::std::string* mutable_name();
+
+// id
+inline bool has_id() const;
+inline void clear_id();
+inline int32_t id() const;
+inline void set_id(int32_t value);
+
+...
+
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Результат генерации}
+    Появились дополнительные методы, нужные прежде всего для отладки.
+    \lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+    keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+    commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+    \small
+\begin{lstlisting}
+// checks if all the required fields have been set.
+bool IsInitialized() const;
+// returns a human-readable representation of the message, 
+// particularly useful for debugging.
+string DebugString() const;
+// overwrites the message with the given message's values.
+void CopyFrom(const Person& from);
+// clears all the elements back to the empty state.
+void Clear();
+\end{lstlisting}
+    И методы для чтения/записи:
+\begin{lstlisting}
+// serializes the message and stores the bytes in the given string.
+bool SerializeToString(string* output) const;
+// parses a message from the given string.
+bool ParseFromString(const string& data);
+// writes the message to the given C++ ostream.
+bool SerializeToOstream(ostream* output) const;
+// parses a message from the given C++ istream.
+bool ParseFromIstream(istream* input);
+\end{lstlisting}
+\end{frame}
+
+\end{document}
+
+ 
