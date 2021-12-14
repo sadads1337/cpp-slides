@@ -1,0 +1,506 @@
+\documentclass{beamer}
+\usepackage{csc}
+\title{Лекция 11. Библиотека Boost.}
+
+\date{
+   \textbf{ИТМО JB}\\
+   16 ноября 2021 \\
+   Санкт-Петербург
+}
+
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+\begin{document}
+\begin{frame} 
+  \titlepage
+\end{frame}
+
+\begin{frame}[fragile]{Boost}
+    \begin{itemize}
+        \item Коллекция библиотек, расширяющих функциональность \langcpp.
+        \item Свободно распространяются по лицензии Boost Software License вместе с исходным кодом и документацией на 
+        \url{www.boost.org}.
+        \item Лицензия позволяет использовать boost в коммерческих проектах.
+        \item Библиотеки из boost являются кандидатами на включение\\ в стандарт \langcpp.
+        \item Некоторые библиотеки boost были включены в стандарты\\ \langcpp 2014/17 года (\texttt{std::variant}, \texttt{std::optional}, \ldots).
+        \item При включении библиотеки в boost она проходит\\ несколько этапов рецензирования.
+        \item Библиотеки boost позволяют обеспечить переносимость.
+        \item В текущей версии в boost более сотни библиотек.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Boost}
+    \begin{itemize}
+        \item Существенно замедляют компиляцию ваших проектов.
+        \item Достаточно часто встречаются баги (в отличие от STL).
+        \item Существенно увеличивают размер библиотеки/исполняемого файла.
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Категории библиотек Boost}
+\medskip
+\fontsize{10pt}{0.8em}\selectfont
+\begin{minipage}{.5\textwidth}
+
+\begin{itemize}
+\item String and text processing
+\item Containers, 
+\item Iterators
+\item Algorithms
+\item Function objects and higher-order programming
+\item Generic Programming
+\item Template Metaprogramming
+\item Concurrent Programming
+\item Math and numerics
+\item Correctness and testing
+\item Data structures
+\item Domain Specific
+\item System
+\end{itemize}
+\end{minipage}%
+\begin{minipage}{.45\textwidth}
+\begin{itemize}
+\item Input/Output
+\item Memory
+\item Image processing
+\item Inter-language support
+\item Language Features Emulation
+\item Parsing
+\item Patterns and Idioms
+\item Programming Interfaces
+\item State Machines
+\item Broken compiler workarounds
+\item Preprocessor Metaprogramming
+\end{itemize}
+\end{minipage}%
+\end{frame}
+
+\begin{frame}[fragile]{{\tt program\_options}}
+\small
+\begin{lstlisting}
+#include <boost/program_options.hpp> 
+
+namespace po = boost::program_options;
+
+int main() {
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "produce help message")
+        ("comp", po::value<int>(), "compression level");
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(ac, av, desc), vm);
+    po::notify(vm);    
+
+    ...
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt program\_options}}
+\small
+\begin{lstlisting}
+int main() {
+    ...  
+
+    if (vm.count("help")) {
+        cout << desc << endl;
+        return 1;
+    }
+    
+    if (vm.count("comp")) {
+        const auto comp_level = vm["comp"].as<int>();
+    } else {
+        cout << "Compression level was not set." << endl;
+    }
+
+    ...
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt any}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include <any>
+
+using namespace std;
+
+int main() {
+    any a = 1;
+    // i:1
+    cout << format("{}:{}", a.type().name(), any_cast<int>(a)) << endl;
+    a = 3.14;
+    // d:3.14
+    cout << format("{}:{}", a.type().name(), any_cast<double>(a)) << endl;
+    try {
+        a = 1;
+        cout << any_cast<float>(a) << '\n';
+    }
+    catch (const bad_any_cast & e) {
+        cout << e.what() << endl;
+    }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt any}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include <any>
+#include <list>
+
+using namespace std;
+using many = list<any>;
+
+void append_int(many & values, int value) {
+    any to_append = value;
+    values.push_back(to_append);
+}
+void append_string(many & values, const string & value) {
+    values.push_back(value);
+}
+void append_char_ptr(many & values, const char * value) {
+    values.push_back(value);
+}
+void append_any(many & values, const any & value) {
+    values.push_back(value);
+}
+...
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt function}}
+\lstset{basicstyle=\fontsize{8pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{8pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{8pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+std::function<float(int x, int y)> f;
+struct int_div { 
+    float operator()(int x, int y) const { return ((float)x)/y; }; 
+};
+f = int_div();
+std::cout << f(5, 3) << std::endl;
+
+std::function<void(int values[], int n, int& sum, float& avg)> sum_avg;
+void do_sum_avg(int values[], int n, int& sum, float& avg) { ... }
+sum_avg = &do_sum_avg;
+
+struct X { int foo(int); };
+std::function<int(X*, int)> f;
+f = &X::foo;
+X x;
+f(&x, 5);
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt bind}}
+\begin{lstlisting}
+struct image;
+
+struct animation {
+    void advance(int ms);
+    bool inactive() const;
+    void render(image & target) const;
+};
+
+std::vector<animation> anims;
+
+template<class C, class P>
+void erase_if(C & c, P pred) {
+    c.erase(
+        std::remove_if(c.begin(), c.end(), pred),
+        c.end());
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt bind}}
+\begin{lstlisting}
+void update(int ms) {
+    std::for_each(
+        anims.begin(),
+        anims.end(), 
+        std::bind(&animation::advance, _1, ms));
+    erase_if(anims, std::mem_fn(&animation::inactive));
+}
+
+void render(image & target) {
+    std::for_each(
+        anims.begin(),
+        anims.end(), 
+        std::bind(&animation::render, _1,
+                  std::ref(target)));
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt bind}}
+\begin{lstlisting}
+
+void update(int ms) {
+    for (auto && anim : anims) {
+        anim.advance(ms);
+    }
+    erase_if(
+        anims,
+        [](auto & anim) { return anim.inactive(); });
+}
+
+void render(image & target) {
+    for (auto && anim : anims) {
+        anim.render(target);
+    }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt bind} and {\tt function}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+struct button 
+{
+    std::function<void()> onClick;
+};
+
+struct player
+{
+    void play();
+    void stop();
+};
+
+button playButton, stopButton;
+player thePlayer;
+
+void connect()
+{
+    // equal to lambda wrapper
+    playButton.onClick = std::bind(&player::play, &thePlayer);
+    stopButton.onClick = std::bind(&player::stop, &thePlayer);
+}
+
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt signal}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include <boost/signal.hpp>
+
+using namespace std;
+
+struct A {
+    boost::signal<void()> SigA;
+    boost::signal<void(int)> SigB;
+};
+
+struct B {
+    void PrintFoo() { cout << "Foo" << endl; }
+    void PrintBar(int i) { cout << "Bar: " << i << endl; }
+};
+
+int main() {
+    A a; B b;
+
+    // connect
+    a.SigA.connect(bind(&B::PrintFoo, &b));
+    a.SigB.connect(bind(&B::PrintBar, &b, _1));
+
+    // post message
+    a.SigA();
+    a.SigB(4);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt signal}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include <boost/signal.hpp>
+
+using namespace std;
+
+struct A {
+    boost::signal<void()> SigA;
+    boost::signal<void(int)> SigB;
+};
+
+struct B {
+    void PrintFoo() { cout << "Foo" << endl; }
+    void PrintBar(int i) { cout << "Bar: " << i << endl; }
+};
+
+int main() {
+    A a; B b;
+
+    // connect
+    a.SigA.connect([&] { b.PrintFoo(); });
+    a.SigB.connect([&](auto i) { b.PrintBar(i); });
+
+    // post message
+    a.SigA();
+    a.SigB(4);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{{\tt lexical\_cast}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include <boost/lexical_cast.hpp>
+
+int main(int, char ** argv) {
+    std::vector<short> args;
+    while (*++argv) {
+        try {
+            args.push_back(boost::lexical_cast<short>(*argv));
+        }
+        catch(const boost::bad_lexical_cast &) {
+            args.push_back(0);
+        }
+    }
+} 
+
+void log_message(const std::string &);
+
+void log_errno(int yoko) {
+    log_message(
+        fmt::format("Error {}: {}",
+        boost::lexical_cast<std::string>(yoko),
+        strerror(yoko)));
+}
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{{\tt optional}}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+optional<char> get_async_input() {
+    if ( !queue.empty() )
+        return optional<char>(queue.top());
+    else return optional<char>(); // uninitialized
+}
+
+void receive_async_message() {
+    optional<char> rcv ;
+    // The safe boolean conversion from 'rcv' is used here.
+    while ( (rcv = get_async_input()) && !timeout() )
+        output(*rcv);
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{String Algo}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include <boost/algorithm/string.hpp>
+using namespace std;
+using namespace boost;
+
+string str1(" hello world! ");
+to_upper(str1);  // str1 == " HELLO WORLD! "
+trim(str1);      // str1 == "HELLO WORLD!"
+
+string str2= to_lower_copy(
+  ireplace_first_copy(str1,"hello","goodbye")); // \verb!str2 == "goodbye world!"!
+
+string str3("hello abc-*-ABC-*-aBc goodbye");
+using find_vector_type = vector<iterator_range<string::iterator>>;
+
+find_vector_type FindVec; // \verb!#1: Search for separators!
+ifind_all(FindVec, str3, "abc"); // \verb!{ [abc],[ABC],[aBc] }!
+
+using split_vector_type = vector<string>;
+
+split_vector_type SplitVec; // \verb!#2: Search for tokens!
+split(SplitVec, str3, is_any_of("-*-"), token_compress_on); 
+// \verb!{ "hello abc","ABC","aBc goodbye" }!
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{variant}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\small
+\begin{lstlisting}
+#include "boost/variant.hpp"
+#include <iostream>
+
+struct my_visitor : public boost::static_visitor<int> {
+    int operator()(int i) const {
+        return i;
+    }
+    int operator()(const std::string & str) const {
+        return str.length();
+    }
+};
+
+int main() {
+    boost::variant<int, std::string> u("hello world");
+    std::cout << u; // output: hello world
+
+    int result = boost::apply_visitor(my_visitor(), u);
+    std::cout << result; 
+    // output: 11 (i.e., length of "hello world")
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{filesystem}
+\lstset{basicstyle=\fontsize{7pt}{.8em}\ttfamily,  
+  keywordstyle=\fontsize{7pt}{.8em}\color{MOOCBlue}\bfseries, 
+  commentstyle=\fontsize{7pt}{.8em}\ttfamily\color{MOOCGreen}}
+\begin{lstlisting}
+
+// using namespace std::filesystem or boost::filesystem
+
+int main(int argc, char **argv)
+{
+    path p(argv[1]);
+
+    if (exists(p)) 
+    {
+        if (is_regular_file(p))
+            cout << "size is " << file_size(p);
+        else if (is_directory(p))
+            cout << "is a directory";
+        else
+            cout << "exists, but is neither a regular file nor a directory";
+    }
+    else
+        cout << p << "does not exist\n";
+}
+\end{lstlisting}
+\end{frame}
+
+\end{document}
+
+ 
